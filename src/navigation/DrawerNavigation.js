@@ -2,7 +2,7 @@ import * as React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import HomeScreen from '../screens/HomeScreen';
 import CustomDrawerContent from '../components/CustomDrawerContent';
-import Icon from 'react-native-vector-icons/Ionicons'; // Import the icon library
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 
 const Drawer = createDrawerNavigator();
@@ -10,28 +10,25 @@ const Drawer = createDrawerNavigator();
 function DrawerNavigation() {
     return (
         <Drawer.Navigator screenOptions={{
-            headerShown: false,
+            // headerShown: false,
             drawerStyle: {
-                backgroundColor: "blue",
                 borderTopRightRadius:0,
                 borderBottomRightRadius:0,
                 paddingHorizontal: 0, // Remove horizontal padding
             },
-        }} initialRouteName="Home1"
+        }} initialRouteName="Home"
             drawerContent={(props) => <CustomDrawerContent {...props} />}
 
         >
-            <Drawer.Screen name="Home1" options={{
+            <Drawer.Screen name="Home" options={{
                 drawerItemStyle: { backgroundColor: '#e0e0e0', borderRadius: 5, marginVertical: 5,marginRight:0 },
                 drawerLabelStyle: {  color: '#007aff', fontSize: 16 },
+                drawerLabel:"Data Entry",
                 drawerIcon: ({ color, size }) => (
-                    <Icon name="analytics-outline" color={color} size={size} />
-                  ),
+                    <Icon name="layer-group" color="#000000" size={20} />
+                ),
             }} component={HomeScreen} />
-            <Drawer.Screen name="Another" options={{
-                drawerItemStyle: { backgroundColor: '#e0e0e0', borderRadius: 5, marginVertical: 5 },
-                drawerLabelStyle: { color: '#007aff', fontSize: 16 },
-            }} component={HomeScreen} />
+
         </Drawer.Navigator>
     );
 }

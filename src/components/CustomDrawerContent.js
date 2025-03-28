@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import { COLORS } from '../theme/theme';
 
 const CustomDrawerContent = (props) => {
   return (
     <View style={styles.container}>
-      <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
+      {/* <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}> */}
         <View style={styles.userInfoSection}>
           <Image
             source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} // Replace with your image URL
@@ -16,7 +17,7 @@ const CustomDrawerContent = (props) => {
         <View style={styles.drawerItemList}>
           <DrawerItemList {...props} />
         </View>
-      </DrawerContentScrollView>
+      {/* </DrawerContentScrollView> */}
     </View>
   );
 };
@@ -27,13 +28,14 @@ const styles = StyleSheet.create({
   },
   drawerContent: {
     paddingTop: 20,
-    paddingHorizontal: 0, // Remove horizontal padding
+    flex:1,
+    backgroundColor:"blue"
   },
   userInfoSection: {
-    width: '100%', // Ensure full width
     paddingVertical: 20,
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
+    marginHorizontal:0,
+    backgroundColor: COLORS.primaryColor,
   },
   userImage: {
     width: 80,
@@ -48,7 +50,7 @@ const styles = StyleSheet.create({
   },
   drawerItemList: {
     width: '100%', // Ensure full width
-    marginTop: 20,
+    marginTop: 10,
   },
 });
 

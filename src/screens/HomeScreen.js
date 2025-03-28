@@ -1,14 +1,13 @@
 import * as React from 'react';
-import { Button, View, Text } from 'react-native';
+import { View, Text, StatusBar } from 'react-native';
+import { COLORS } from '../theme/theme';
 
 export default function HomeScreen({ navigation }) {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Home Screen</Text>
-      <Button
-        title="Go to Details"
-        onPress={() => navigation.navigate('Drawer')}
-      />
+      <StatusBar backgroundColor={COLORS.primaryColor} barStyle={'light-content'} />
+      <Text style={{fontSize:20}}>Data Entry screen</Text>
+  
     </View>
   );
 }

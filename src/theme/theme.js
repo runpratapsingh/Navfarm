@@ -16,6 +16,7 @@ export const SPACING = {
   };
   
   export const COLORS = {
+    primaryColor:"#C24332",
     primaryPinkishRedHex: "#EB4869",
     primaryBlackHex: "#182230",
     primaryTealishBlueHex: "#0A2262",
