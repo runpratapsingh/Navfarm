@@ -12,7 +12,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   StatusBar,
-  Alert
+  Alert,
+  Image
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { COLORS } from '../../theme/theme';
@@ -20,6 +21,8 @@ import PhoneInput from "react-native-international-phone-number";
 import { SvgXml } from 'react-native-svg';
 import { SvgxmlIMages } from '../../utils/Svgxml';
 import { useNavigation } from '@react-navigation/native';
+import CustomButton from '../../components/CustumButton';
+import { requireImage } from '../../utils/Images';
 
 const SignInScreen = () => {
   const [email, setEmail] = useState('');
@@ -61,16 +64,21 @@ const SignInScreen = () => {
 
   const handleSignIn = () => {
     // Collect form data
+    const phoneNumberWithoutSpaces = inputValue.replace(/\s+/g, '');
+    const PhoneNumberWithFormated = `${selectedCountry?.callingCode} ${phoneNumberWithoutSpaces}`;
     const formData = {
       email,
       password,
       phoneNumber: inputValue,
       rememberMe
     };
+    navigation.navigate('otpVerification', { phoneNumber: PhoneNumberWithFormated });
+    console.log("jsdkajdgahgdkhada", formData, selectedCountry, `${selectedCountry?.callingCode} ${phoneNumberWithoutSpaces}`);
+
 
     // Display form data (for demonstration purposes)
     // Alert.alert('Form Data', JSON.stringify(formData, null, 2));
-    navigation.navigate('Drawer')
+    // navigation.navigate('Drawer')
   };
 
   return (
@@ -87,10 +95,13 @@ const SignInScreen = () => {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.innerContainer}>
-              <View style={styles.logoContainer}>
-                <SvgXml xml={SvgxmlIMages.logo} height={100} width={100} />
+              <View style={styles.logoParentContainer}>
+                <View style={styles.logoContainer}>
+                  {/* <SvgXml xml={SvgxmlIMages.logo} height={100} width={100} />
+                 */}
+                  <Image source={requireImage.logoImage} style={{ width: "100%", height: "100%" }} />
+                </View>
               </View>
-
               <Text style={styles.title}>Sign in to your account</Text>
 
               {/* Email Input */}
@@ -110,8 +121,8 @@ const SignInScreen = () => {
                       marginBottom: 10,
                       height: 55,
                       borderWidth: 1,
-                      borderColor: COLORS.inputBorderColor,
-                      borderRadius: 10,
+                      borderColor: "#ddd",
+                      borderRadius: 5,
                     },
                   }}
                 />
@@ -157,13 +168,11 @@ const SignInScreen = () => {
               <View style={styles.divider} />
 
               {/* Sign In Button */}
-              <TouchableOpacity
-                style={[styles.signInButton, !isSignInEnabled && styles.signInButtonDisabled]}
+              <CustomButton
+                title="Sign in"
                 onPress={handleSignIn}
                 disabled={!isSignInEnabled}
-              >
-                <Text style={styles.signInButtonText}>Sign in</Text>
-              </TouchableOpacity>
+              />
 
               <View style={styles.divider} />
 
@@ -226,6 +235,11 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   logoContainer: {
+
+    height: 63,
+    width: 100,
+  },
+  logoParentContainer: {
     alignItems: "center",
     paddingVertical: 20,
   },

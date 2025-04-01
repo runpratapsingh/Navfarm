@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, Animated, StatusBar } from "react-native
 import { SvgxmlIMages } from "../../utils/Svgxml";
 import { SvgXml } from "react-native-svg";
 import { COLORS } from "../../theme/theme";
+import { requireImage } from "../../utils/Images";
 
 const SplashScreen = ({ navigation }) => {
   const fadeAnim = new Animated.Value(0);
@@ -21,12 +22,11 @@ const SplashScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryColor} />
-      <Animated.View style={{ opacity: fadeAnim,justifyContent: "center",alignItems: "center" }}>
-        {/* <Image source={require("../assets/logo.png")} style={styles.logo} />
-         */}
-        <SvgXml xml={SvgxmlIMages.logo} height={100} width={100}  />
-        <Text style={styles.text}>Welcome to Navfarm</Text>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryColor} />
+      <Animated.View style={{ opacity: fadeAnim, justifyContent: "center", alignItems: "center" }}>
+        <View style={styles.logoContainer}>
+          <Image source={requireImage.SplaceLogo} style={{ width: "100%", height: "100%" }} />
+        </View>
       </Animated.View>
     </View>
   );
@@ -49,6 +49,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#333",
+  },
+  logoContainer: {
+
+    height: 150,
+    width: 150,
   },
 });
 

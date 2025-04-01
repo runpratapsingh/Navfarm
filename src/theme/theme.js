@@ -16,51 +16,14 @@ export const SPACING = {
   };
   
   export const COLORS = {
-    primaryColor:"#C24332",
-    primaryPinkishRedHex: "#EB4869",
-    primaryBlackHex: "#182230",
-    primaryTealishBlueHex: "#0A2262",
-    primaryCyanBlueHex: "#1E252E",
-    primaryDarkLabelHex: "#080515",
-    placeHolderTextFieldHex: "#7C7A86",
-    LinkColorHex: "#4178EF",
-    modalTextContentHex: "#393744",
-    doNotAllowBgColor: "#FFECF0",
-    validationColorHex: "#52555A",
-    onBoardingBgColor: "#D9FFF2",
-    onBoardingParagraphColor: "#52505B",
-    secondaryLightGreyHex: "#AEAEAE",
-    secondaryGrayRGBA: "#52505B",
+    SecondaryColor:"#C24332",
+    primaryColor:"#2E313F",
     primaryWhiteHex: "#FFFFFF",
-    primaryBlackRGB: "#211E2C",
     secondaryBlackRGBA: "rgba(0,0,0,0.7)",
-    inputBorderColor: "#E6E6E8",
-    optionsContainer: "#eef0f4",
-    drawerbtntextColor: "#1E252E",
-    inputtextColor: "#101828",
-    borderColor: "",
-    subTitleColor: "#6B6973",
   };
   
   export const FONTFAMILY = {
-    Inter_black: "Inter-Black",
-    Inter_bold: "Inter-Bold",
-    Inter_extrabold: "Inter-ExtraBold",
-    Inter_extralight: "Inter-ExtraLight",
-    Inter_light: "Inter-Light",
-    Inter_medium: "Inter-Medium",
-    Inter_regular: "Inter-Regular",
-    Inter_semibold: "Inter-SemiBold",
-    Inter_thin: "Inter-Thin",
-    Inter_black: "K2D-Black",
-    K2D_bold: "K2D-Bold",
-    K2D_extrabold: "K2D-ExtraBold",
-    K2D_extralight: "K2D-ExtraLight",
-    K2D_light: "K2D-Light",
-    K2D_medium: "K2D-Medium",
-    K2D_regular: "K2D-Regular",
-    K2D_semibold: "K2D-SemiBold",
-    K2D_thin: "K2D-Thin",
+   
   };
   
   export const FONTSIZE = {

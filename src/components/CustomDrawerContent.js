@@ -50,7 +50,6 @@ const styles = StyleSheet.create({
   },
   drawerItemList: {
     width: '100%', // Ensure full width
-    marginTop: 10,
   },
 });
 
