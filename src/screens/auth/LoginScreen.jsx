@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -13,25 +13,27 @@ import {
   Keyboard,
   StatusBar,
   Alert,
-  Image
+  Image,
+  ActivityIndicator, // Import ActivityIndicator for loading spinner
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { COLORS } from '../../theme/theme';
-import PhoneInput from "react-native-international-phone-number";
-import { SvgXml } from 'react-native-svg';
-import { SvgxmlIMages } from '../../utils/Svgxml';
-import { useNavigation } from '@react-navigation/native';
+import {COLORS} from '../../theme/theme';
+import PhoneInput from 'react-native-international-phone-number';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useNavigation} from '@react-navigation/native';
 import CustomButton from '../../components/CustumButton';
-import { requireImage } from '../../utils/Images';
+import {requireImage} from '../../utils/Images';
+import {API_ENDPOINTS, AUTH_HEADERS} from '../../Apiconfig/Apiconfig';
+import axios from 'axios';
 
 const SignInScreen = () => {
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
   const [isSignInEnabled, setIsSignInEnabled] = useState(false);
+  const [loading, setLoading] = useState(false); // Add loading state
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -39,16 +41,16 @@ const SignInScreen = () => {
   }, [inputValue, password, rememberMe]);
 
   function handleInputValue(phoneNumber) {
-    console.log("Country code", phoneNumber);
+    console.log('Country code', phoneNumber);
     setInputValue(phoneNumber);
   }
 
   function handleSelectedCountry(country) {
-    console.log("Country code", country);
+    console.log('Country code', country);
     setSelectedCountry(country);
   }
 
-  const handlePasswordChange = (text) => {
+  const handlePasswordChange = text => {
     setPassword(text);
   };
 
@@ -57,28 +59,63 @@ const SignInScreen = () => {
   };
 
   const checkFormValidity = () => {
-    const isValid = inputValue.trim() !== "" && password.trim() !== "" && rememberMe;
-    console.log("Form Validity Check:", { inputValue, password, rememberMe, isValid });
+    const isValid =
+      inputValue.trim() !== '' && password.trim() !== '' && rememberMe;
+    console.log('Form Validity Check:', {
+      inputValue,
+      password,
+      rememberMe,
+      isValid,
+    });
     setIsSignInEnabled(isValid);
   };
 
-  const handleSignIn = () => {
-    // Collect form data
-    const phoneNumberWithoutSpaces = inputValue.replace(/\s+/g, '');
-    const PhoneNumberWithFormated = `${selectedCountry?.callingCode} ${phoneNumberWithoutSpaces}`;
-    const formData = {
-      email,
-      password,
-      phoneNumber: inputValue,
-      rememberMe
-    };
-    navigation.navigate('otpVerification', { phoneNumber: PhoneNumberWithFormated });
-    console.log("jsdkajdgahgdkhada", formData, selectedCountry, `${selectedCountry?.callingCode} ${phoneNumberWithoutSpaces}`);
+  const handleSignIn = async () => {
+    setLoading(true); // Set loading to true before API call
+    try {
+      const phoneNumberWithoutSpaces = inputValue.replace(/\s+/g, '');
+      const formattedPhoneNumber = `${selectedCountry?.callingCode}${phoneNumberWithoutSpaces}`;
 
+      const config = {
+        method: 'post',
+        url: API_ENDPOINTS.LOGIN,
+        headers: AUTH_HEADERS,
+        data: {
+          mobile_no: String(formattedPhoneNumber),
+          password: String(password),
+          social_id: null,
+          signinwithotp: false,
+        },
+      };
+      const response = await axios(config);
+      if (response.data?.status === 'success') {
+        const userData = response.data.data?.login[0];
 
-    // Display form data (for demonstration purposes)
-    // Alert.alert('Form Data', JSON.stringify(formData, null, 2));
-    // navigation.navigate('Drawer')
+        if (userData) {
+          await AsyncStorage.setItem('userData', JSON.stringify(userData));
+          console.log('User data stored successfully:', userData);
+          navigation.navigate('Drawer');
+        }
+      }
+      console.log('Login successful:', response.data);
+    } catch (error) {
+      if (error.response) {
+        console.error(
+          'Server responded with:',
+          error.response.status,
+          error.response.data,
+        );
+        throw new Error(error.response.data.message || 'Login failed');
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        throw new Error('No response from server. Please try again later.');
+      } else {
+        console.error('Error setting up request:', error.message);
+        throw new Error('Unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setLoading(false); // Set loading to false after API call
+    }
   };
 
   return (
@@ -87,52 +124,54 @@ const SignInScreen = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
-      >
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
             contentContainerStyle={styles.scrollContainer}
-            keyboardShouldPersistTaps="handled"
-          >
+            keyboardShouldPersistTaps="handled">
             <View style={styles.innerContainer}>
               <View style={styles.logoParentContainer}>
                 <View style={styles.logoContainer}>
-                  {/* <SvgXml xml={SvgxmlIMages.logo} height={100} width={100} />
-                 */}
-                  <Image source={requireImage.logoImage} style={{ width: "100%", height: "100%" }} />
+                  <Image
+                    source={requireImage.logoImage}
+                    style={{width: '100%', height: '100%'}}
+                  />
                 </View>
               </View>
               <Text style={styles.title}>Sign in to your account</Text>
-
               {/* Email Input */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Phone Number</Text>
                 <PhoneInput
                   value={inputValue}
-                  defaultCountry={"IN"}
+                  defaultCountry={'IN'}
                   onChangePhoneNumber={handleInputValue}
                   selectedCountry={selectedCountry}
                   onChangeSelectedCountry={handleSelectedCountry}
                   placeholder="Enter phone number"
                   phoneInputStyles={{
                     container: {
-                      width: "100%",
+                      width: '100%',
                       marginVertical: 5,
                       marginBottom: 10,
                       height: 55,
                       borderWidth: 1,
-                      borderColor: "#ddd",
+                      borderColor: '#ddd',
                       borderRadius: 5,
                     },
                   }}
                 />
               </View>
-
               {/* Password Input */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Password</Text>
                 <View style={styles.inputWrapper}>
-                  <Icon name="lock" size={18} color="#666" style={styles.icon} />
+                  <Icon
+                    name="lock"
+                    size={18}
+                    color="#666"
+                    style={styles.icon}
+                  />
                   <TextInput
                     style={styles.input}
                     placeholder="Enter your password"
@@ -140,59 +179,69 @@ const SignInScreen = () => {
                     onChangeText={handlePasswordChange}
                     secureTextEntry={!showPassword}
                   />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                    <Icon name={showPassword ? "eye-slash" : "eye"} size={18} color="#666" />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}>
+                    <Icon
+                      name={showPassword ? 'eye-slash' : 'eye'}
+                      size={18}
+                      color="#666"
+                    />
                   </TouchableOpacity>
                 </View>
               </View>
-
               {/* Forgot Password */}
               <TouchableOpacity style={styles.forgotPassword}>
                 <Text style={styles.linkText}>Forget password?</Text>
               </TouchableOpacity>
-
               {/* Remember Me and Agreements */}
               <View style={styles.checkboxContainer}>
-                <TouchableOpacity onPress={handleRememberMeChange}>
+                <TouchableOpacity
+                  style={styles.checkbox}
+                  onPress={handleRememberMeChange}>
                   <Icon
-                    name={rememberMe ? "check-square" : "square"}
+                    name={rememberMe ? 'check-square' : 'square'}
                     size={20}
-                    color={rememberMe ? "#4a90e2" : "#666"}
+                    color={rememberMe ? '#4a90e2' : '#666'}
                   />
                 </TouchableOpacity>
                 <Text style={styles.agreementText}>
-                  I have read and agreed to <Text style={styles.boldText}>User Agreement</Text> and <Text style={styles.boldText}>Privacy Policy</Text>
+                  I have read and agreed to{' '}
+                  <Text style={styles.boldText}>User Agreement</Text> and{' '}
+                  <Text style={styles.boldText}>Privacy Policy</Text>
                 </Text>
               </View>
-
               <View style={styles.divider} />
-
               {/* Sign In Button */}
               <CustomButton
-                title="Sign in"
+                title={loading ? 'Signing in...' : 'Sign in'}
                 onPress={handleSignIn}
-                disabled={!isSignInEnabled}
+                disabled={!isSignInEnabled || loading}
               />
-
+              {/* Show loading indicator */}
               <View style={styles.divider} />
-
               {/* Alternative Sign In Methods */}
               <View style={styles.socialIconsContainer}>
-                <TouchableOpacity style={styles.socialButton} onPress={() => { }}>
+                <TouchableOpacity
+                  style={styles.socialButton}
+                  onPress={() => {}}>
                   <Icon name="google" size={24} color="#DB4437" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.socialButton} onPress={() => { }}>
+                <TouchableOpacity
+                  style={styles.socialButton}
+                  onPress={() => {}}>
                   <Icon name="facebook" size={24} color="#4267B2" />
                 </TouchableOpacity>
               </View>
-
               <View style={styles.divider} />
-
               {/* Create Account */}
               <View style={styles.createAccountContainer}>
-                <Text style={styles.createAccountText}>Don't have an account? </Text>
+                <Text style={styles.createAccountText}>
+                  Don't have an account?{' '}
+                </Text>
                 <TouchableOpacity>
-                  <Text style={[styles.linkText, styles.boldText]}>Create Account</Text>
+                  <Text style={[styles.linkText, styles.boldText]}>
+                    Create Account
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -235,12 +284,11 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   logoContainer: {
-
     height: 63,
     width: 100,
   },
   logoParentContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: 20,
   },
   inputWrapper: {
@@ -273,6 +321,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
   },
+  checkbox: {},
   agreementText: {
     marginLeft: 10,
     fontSize: 14,
@@ -322,7 +371,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: "black",
+    borderColor: 'black',
   },
 });
 
