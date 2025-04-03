@@ -8,10 +8,12 @@ import {
   ScrollView,
   StyleSheet,
   StatusBar,
+  Dimensions,
 } from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {COLORS} from '../../../theme/theme';
+const {width} = Dimensions.get('window');
 
 // Define parameter types for the dropdown
 const parameterTypes = [
@@ -48,7 +50,7 @@ const uoms = [
   {label: 'KG', value: 'KG'},
 ];
 
-export default function DataEntryScreen({entries, setEntries}) {
+export default function DataEntryAddLine() {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [selectedParameterType, setSelectedParameterType] = useState(null);
   const [selectedParameterName, setSelectedParameterName] = useState(null);
@@ -57,6 +59,38 @@ export default function DataEntryScreen({entries, setEntries}) {
   const [selectedDataEntryType, setSelectedDataEntryType] = useState(null);
   const [selectedItemName, setSelectedItemName] = useState(null);
   const [selectedUOM, setSelectedUOM] = useState(null);
+  const [entries, setEntries] = useState([
+    {
+      parameterType: 'Consumption',
+      parameterName: 'Culls',
+      totalUnits: '10',
+      costPerUnit: '5',
+      dataEntryType: 'Mortality-F',
+      itemName: 'Brickets',
+      uom: 'KG',
+      stock: 0,
+    },
+    {
+      parameterType: 'Production',
+      parameterName: 'Eggs',
+      totalUnits: '20',
+      costPerUnit: '3',
+      dataEntryType: 'Feed-Male',
+      itemName: 'Broiler Breeder Male',
+      uom: 'TON',
+      stock: 0,
+    },
+    {
+      parameterType: 'Consumption',
+      parameterName: 'Feed Finisher',
+      totalUnits: '15',
+      costPerUnit: '4',
+      dataEntryType: 'Feed-Female',
+      itemName: 'Broiler Breeder Lay 1',
+      uom: 'KG',
+      stock: 0,
+    },
+  ]);
 
   const addEntry = () => {
     if (!selectedParameterType || !selectedParameterName || !selectedUOM)
@@ -165,60 +199,8 @@ export default function DataEntryScreen({entries, setEntries}) {
           <TouchableOpacity style={styles.button} onPress={addEntry}>
             <Text style={styles.buttonText}>Add Line</Text>
           </TouchableOpacity>
+          <View style={styles.divider} />
         </View>
-      )}
-      {entries.length > 0 && (
-        <ScrollView
-          style={{
-            flex: 1,
-            marginHorizontal: 16,
-            marginVertical: 10,
-            borderLeftWidth: 1,
-            borderRightWidth: 1,
-            borderColor: '#ddd',
-          }}
-          horizontal>
-          <View>
-            <View style={styles.tableHeader}>
-              {[
-                'Parameter Type',
-                'Parameter Name',
-                'Total Units',
-                'Cost Per Unit',
-                'Data Entry Type',
-                'Item Name',
-                'UOM',
-                'Stock',
-              ].map((header, index) => (
-                <Text key={index} style={styles.tableHeaderText}>
-                  {header}
-                </Text>
-              ))}
-            </View>
-            <FlatList
-              data={entries}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({item}) => (
-                <View style={styles.tableRow}>
-                  {[
-                    item.parameterType,
-                    item.parameterName,
-                    item.totalUnits,
-                    item.costPerUnit,
-                    item.dataEntryType,
-                    item.itemName,
-                    item.uom,
-                    item.stock,
-                  ].map((data, index) => (
-                    <Text key={index} style={styles.tableCell}>
-                      {data}
-                    </Text>
-                  ))}
-                </View>
-              )}
-            />
-          </View>
-        </ScrollView>
       )}
     </ScrollView>
   );
@@ -226,6 +208,13 @@ export default function DataEntryScreen({entries, setEntries}) {
 
 const styles = StyleSheet.create({
   container: {flex: 1},
+  divider: {
+    height: 1,
+    width: width,
+    backgroundColor: '#ddd',
+    marginVertical: 10,
+    marginLeft: -16,
+  },
   headerContainer: {
     paddingBottom: 10,
     flexDirection: 'row',

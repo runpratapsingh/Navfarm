@@ -1,14 +1,14 @@
 import React, {useEffect} from 'react';
 import {View, Text, Image, StyleSheet, Animated, StatusBar} from 'react-native';
 import {COLORS} from '../../theme/theme';
-import {requireImage} from '../../utils/Images';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {requireImage} from '../../utils/JSON/Images';
+import {appStorage} from '../../utils/services/StorageHelper';
 
 const SplashScreen = ({navigation}) => {
   const fadeAnim = new Animated.Value(0);
   const checkAuth = async () => {
     try {
-      const userData = await AsyncStorage.getItem('userData');
+      const userData = await appStorage.getUserData();
       if (userData) {
         navigation.replace('Drawer'); // Navigate to Home if logged in
       } else {

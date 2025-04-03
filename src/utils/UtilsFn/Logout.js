@@ -1,13 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {CommonActions} from '@react-navigation/native';
+import {navigationRef} from '../services/NavigationService';
+import {appStorage} from '../services/StorageHelper';
 
-export const logout = async navigation => {
-  await AsyncStorage.removeItem('authToken'); // Remove access token
-
-  navigation.dispatch(
-    CommonActions.reset({
-      index: 0,
-      routes: [{name: 'LoginScreen'}], // Navigate to Login
-    }),
-  );
+export const logout = async () => {
+  await appStorage.removeAuthToken();
+  await appStorage.removeUserData();
+  navigationRef.reset({index: 0, routes: [{name: 'login'}]});
 };

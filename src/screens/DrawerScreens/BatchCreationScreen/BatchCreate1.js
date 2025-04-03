@@ -10,7 +10,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import {COLORS} from '../../../theme/theme';
 import CustomInput from '../../../components/CustumInputField';
 import HeaderWithBtn from '../../../components/HeaderWithBackBtn';
-import DataEntryScreen from '../DataEntryScreen/CreateDataentry';
+import DataEntryScreen from '../DataEntryScreen/DataEntry_AddLine';
 
 const BatchCreation1 = () => {
   const [formState, setFormState] = useState({

@@ -6,20 +6,16 @@
  */
 
 import React from 'react';
-import {
-  StyleSheet,
-  Text,
-} from 'react-native';
+import {StyleSheet, Text} from 'react-native';
 import MyStack from './src/navigation/stackNavigator';
-import { NavigationContainer } from '@react-navigation/native';
-
+import {NavigationContainer} from '@react-navigation/native';
+import {navigationRef} from './src/utils/services/NavigationService';
 
 function App(): React.JSX.Element {
-
   return (
-  <NavigationContainer>
-    <MyStack />
-  </NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
+      <MyStack />
+    </NavigationContainer>
   );
 }
 

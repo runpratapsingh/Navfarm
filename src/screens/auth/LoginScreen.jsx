@@ -19,12 +19,13 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import {COLORS} from '../../theme/theme';
 import PhoneInput from 'react-native-international-phone-number';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 import CustomButton from '../../components/CustumButton';
-import {requireImage} from '../../utils/Images';
+import {requireImage} from '../../utils/JSON/Images';
 import {API_ENDPOINTS, AUTH_HEADERS} from '../../Apiconfig/Apiconfig';
 import axios from 'axios';
+import api from '../../Apiconfig/ApiconfigWithInterceptor';
+import {appStorage} from '../../utils/services/StorageHelper';
 
 const SignInScreen = () => {
   const [password, setPassword] = useState('');
@@ -92,9 +93,13 @@ const SignInScreen = () => {
         const userData = response.data.data?.login[0];
 
         if (userData) {
-          await AsyncStorage.setItem('userData', JSON.stringify(userData));
+          await appStorage.setUserData(userData);
+          await appStorage.setAuthToken(userData.token);
           console.log('User data stored successfully:', userData);
-          navigation.navigate('Drawer');
+          const storedToken = await appStorage.getAuthToken();
+          if (storedToken) {
+            await fetchCommonDetails(userData.companY_ID, userData.useR_ID);
+          }
         }
       }
       console.log('Login successful:', response.data);
@@ -115,6 +120,26 @@ const SignInScreen = () => {
       }
     } finally {
       setLoading(false); // Set loading to false after API call
+    }
+  };
+
+  const fetchCommonDetails = async (companyId, userId) => {
+    try {
+      const response = await api.get(API_ENDPOINTS.COMMON_DETAILS, {
+        params: {
+          company_id: companyId,
+          user_id: userId,
+        },
+      });
+      console.log('Common details fetched:', response.data);
+      if (response?.data?.status === 'success') {
+        const commonDetails = response.data.data.common_details[0];
+        await appStorage.setCommonDetails(commonDetails);
+        console.log('Common details stored successfully:', commonDetails);
+        navigation.replace('CategorySelection');
+      }
+    } catch (error) {
+      console.error('Error fetching common details:', error);
     }
   };
 

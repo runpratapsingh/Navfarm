@@ -10,6 +10,15 @@
     <style name="Theme.App.Light" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Force Light Mode -->
         <item name="android:forceDarkAllowed">false</item>
+
+        <!-- Set the status bar color to match your light theme -->
+        <item name="android:statusBarColor">@android:color/white</item>
+
+        <!-- Optionally, set the color of the navigation bar as well -->
+        <item name="android:navigationBarColor">@android:color/white</item>
+
+        <!-- Ensure text on light backgrounds is visible -->
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
 
