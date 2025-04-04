@@ -26,6 +26,7 @@ import {API_ENDPOINTS, AUTH_HEADERS} from '../../Apiconfig/Apiconfig';
 import axios from 'axios';
 import api from '../../Apiconfig/ApiconfigWithInterceptor';
 import {appStorage} from '../../utils/services/StorageHelper';
+import ErrorModal from '../../components/CustumModal';
 
 const SignInScreen = () => {
   const [password, setPassword] = useState('');
@@ -34,7 +35,9 @@ const SignInScreen = () => {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [inputValue, setInputValue] = useState('');
   const [isSignInEnabled, setIsSignInEnabled] = useState(false);
-  const [loading, setLoading] = useState(false); // Add loading state
+  const [loading, setLoading] = useState(false);
+  const [errorVisible, setErrorVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -101,6 +104,9 @@ const SignInScreen = () => {
             await fetchCommonDetails(userData.companY_ID, userData.useR_ID);
           }
         }
+      } else {
+        setErrorMessage(response.data?.message || 'Something went wrong');
+        setErrorVisible(true);
       }
       console.log('Login successful:', response.data);
     } catch (error) {
@@ -273,6 +279,11 @@ const SignInScreen = () => {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
+      <ErrorModal
+        visible={errorVisible}
+        onClose={() => setErrorVisible(false)}
+        message={errorMessage}
+      />
     </SafeAreaView>
   );
 };

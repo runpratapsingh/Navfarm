@@ -12,6 +12,15 @@ const setItem = async (key, value) => {
   }
 };
 
+export const clearAllData = async () => {
+  try {
+    await AsyncStorage.clear();
+    console.log('All AsyncStorage data cleared successfully');
+  } catch (error) {
+    console.error('Error clearing all AsyncStorage data:', error);
+  }
+};
+
 const getItem = async key => {
   try {
     const jsonValue = await AsyncStorage.getItem(key);

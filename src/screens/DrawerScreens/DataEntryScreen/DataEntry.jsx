@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,9 @@ import {
   FlatList,
   StyleSheet,
   StatusBar,
+  Animated,
 } from 'react-native';
+import {PanGestureHandler} from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import {useNavigation} from '@react-navigation/native';
 import Header from '../../../components/HeaderComp';
@@ -15,6 +17,7 @@ import {appStorage} from '../../../utils/services/StorageHelper';
 import api from '../../../Apiconfig/ApiconfigWithInterceptor';
 import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
 import {navigate} from '../../../utils/services/NavigationService';
+import LinkedDropdowns from './DataEntryHistory';
 
 const mainTabs = ['Data Entry', 'Data Entry History'];
 
@@ -24,6 +27,17 @@ const DataEntryScreen = () => {
   const [expanded, setExpanded] = useState(null);
   const [loading, setLoading] = useState(false);
   const [batchData, setBatchData] = useState([]);
+
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  const handleSwipe = event => {
+    const {translationX} = event.nativeEvent;
+    if (translationX < -50 && activeMainTab !== 'Data Entry History') {
+      setActiveMainTab('Data Entry History');
+    } else if (translationX > 50 && activeMainTab !== 'Data Entry') {
+      setActiveMainTab('Data Entry');
+    }
+  };
 
   const getDashboardData = async () => {
     try {
@@ -93,20 +107,31 @@ const DataEntryScreen = () => {
           </View>
           {item.batches.map(section => (
             <View key={section.batch_id} style={styles.tableContainer}>
-              <View style={styles.tableRow}>
-                <Text style={styles.rowText}>{section.batch_no}</Text>
-                <Text style={styles.rowText}>{section.start_date}</Text>
-                <Text style={styles.rowText}>{section.last_entry_date}</Text>
-                <Text style={styles.rowText}>{section.status}</Text>
-                <TouchableOpacity
-                  onPress={() =>
-                    navigate('editDataEntry', {
-                      batch_id: section.batch_id,
-                    })
-                  }>
-                  <Icon name="edit" size={16} color="blue" />
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                onPress={() =>
+                  navigate('editDataEntry', {
+                    batch_id: section.batch_id,
+                  })
+                }>
+                <View style={styles.tableRow}>
+                  <Text style={styles.rowText}>{section.batch_no}</Text>
+                  <Text style={styles.rowText}>{section.start_date}</Text>
+                  <Text style={styles.rowText}>{section.last_entry_date}</Text>
+                  <Text style={styles.rowText}>{section.status}</Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigate('editDataEntry', {
+                        batch_id: section.batch_id,
+                      })
+                    }>
+                    <Icon
+                      name="chevron-right"
+                      size={16}
+                      color={COLORS.SecondaryColor}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
             </View>
           ))}
         </View>
@@ -115,35 +140,43 @@ const DataEntryScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Status Bar */}
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor={COLORS.primaryColor}
-      />
-
-      {/* Header Component */}
-      <Header onFilterPress={() => navigation.openDrawer()} />
-      {/* Main Tabs */}
-      <View style={styles.tabsContainer}>
-        {mainTabs.map(tab => (
-          <TouchableOpacity key={tab} onPress={() => setActiveMainTab(tab)}>
-            <Text
-              style={[styles.tab, activeMainTab === tab && styles.activeTab]}>
-              {tab}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {activeMainTab === 'Data Entry' && (
-        <FlatList
-          data={batchData}
-          renderItem={renderBatchItem}
-          keyExtractor={item => item.lob_id.toString()}
+    <PanGestureHandler onHandlerStateChange={handleSwipe}>
+      <Animated.View style={styles.container}>
+        {/* Status Bar */}
+        <StatusBar
+          barStyle="light-content"
+          backgroundColor={COLORS.primaryColor}
         />
-      )}
-    </View>
+
+        {/* Header Component */}
+        <Header onFilterPress={() => navigation.openDrawer()} />
+        {/* Main Tabs */}
+        <View style={styles.tabsContainer}>
+          {mainTabs.map(tab => (
+            <TouchableOpacity
+              style={styles.tabContainer}
+              key={tab}
+              onPress={() => setActiveMainTab(tab)}>
+              <Text
+                style={[styles.tab, activeMainTab === tab && styles.activeTab]}>
+                {tab}
+              </Text>
+              {activeMainTab === tab && <View style={styles.activeTabBorder} />}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {activeMainTab === 'Data Entry' && (
+          <FlatList
+            contentContainerStyle={styles.flatListContainer}
+            data={batchData}
+            renderItem={renderBatchItem}
+            keyExtractor={item => item.lob_id.toString()}
+          />
+        )}
+        {activeMainTab === 'Data Entry History' && <LinkedDropdowns />}
+      </Animated.View>
+    </PanGestureHandler>
   );
 };
 
@@ -154,11 +187,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
-  tab: {padding: 10, fontSize: 16, color: '#fff'},
+  tabContainer: {
+    width: '50%',
+    alignItems: 'center',
+    paddingVertical: 10,
+    position: 'relative',
+  },
+  tab: {padding: 10, fontSize: 16, color: '#fff', textAlign: 'center'},
   activeTab: {
-    borderBottomWidth: 3,
-    borderBottomColor: COLORS.SecondaryColor,
-    color: '#fff',
+    color: COLORS.SecondaryColor,
+  },
+  activeTabBorder: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: COLORS.SecondaryColor,
   },
   accordionHeader: {
     flexDirection: 'row',
@@ -172,8 +217,6 @@ const styles = StyleSheet.create({
   icon: {marginLeft: 10},
   tableContainer: {
     marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
     borderRadius: 5,
   },
   tableHeader: {
@@ -192,6 +235,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rowText: {flex: 1, textAlign: 'center'},
+  flatListContainer: {
+    flexGrow: 1,
+  },
 });
 
 export default DataEntryScreen;

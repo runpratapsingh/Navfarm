@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  FlatList,
+  StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {COLORS} from '../../../theme/theme';
@@ -14,11 +16,13 @@ import {appStorage} from '../../../utils/services/StorageHelper';
 import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
 import api from '../../../Apiconfig/ApiconfigWithInterceptor';
 import DataEntryAddLine from './DataEntry_AddLine';
+import {navigate} from '../../../utils/services/NavigationService';
+import ErrorModal from '../../../components/CustumModal';
 
 const EditDataEntry = ({route}) => {
   const {batch_id} = route.params;
   const [formState, setFormState] = useState({
-    isHeaderVisible: true,
+    isHeaderVisible: false,
     isLineVisible: true,
     showAdditionalFields: false,
     natureOfBusiness: '',
@@ -33,25 +37,83 @@ const EditDataEntry = ({route}) => {
     openingQuantity: '',
     startDate: '',
     runningCost: '',
-    mortality: {itemName: 'Commercial Fish', totalUnits: '0.0'},
-    feedInput1: {itemName: 'Feed 1.9mm', totalUnits: '0.0'},
-    feedInput2: {itemName: 'Feed 4.5mm', totalUnits: '0.0'},
+    batch_No: '',
   });
+  const [lineData, setLineData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [errorVisible, setErrorVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSave = () => {
-    // Implement save functionality
-    console.log('Data saved:', formState);
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      const userDataString = await appStorage.getUserData();
+      const userData = userDataString;
+
+      if (!userData.companY_ID) {
+        console.error('Company ID is missing from user data');
+        return;
+      }
+
+      const updatedData = {
+        ...formState,
+        lineData,
+        batch_id,
+        company_id: userData.companY_ID,
+      };
+
+      console.log('Saving data:', updatedData);
+
+      // const response = await api.post(API_ENDPOINTS.SaveDataEntry, updatedData);
+
+      // if (response.data?.status === 'success') {
+      //   console.log('Data saved successfully:', response.data);
+      // } else {
+      //   console.error('Failed to save data:', response.data);
+      // }
+    } catch (error) {
+      console.error('API Error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePost = () => {
-    // Implement post functionality
-    console.log('Data posted:', formState);
+  const handlePost = async () => {
+    try {
+      setLoading(true);
+      const userDataString = await appStorage.getUserData();
+      const userData = userDataString;
+
+      if (!userData.companY_ID) {
+        console.error('Company ID is missing from user data');
+        return;
+      }
+
+      const updatedData = {
+        ...formState,
+        lineData,
+        batch_id,
+        company_id: userData.companY_ID,
+      };
+
+      console.log('Posting data:', updatedData);
+
+      // const response = await api.post(API_ENDPOINTS.PostDataEntry, updatedData);
+
+      // if (response.data?.status === 'success') {
+      //   console.log('Data posted successfully:', response.data);
+      // } else {
+      //   console.error('Failed to post data:', response.data);
+      // }
+    } catch (error) {
+      console.error('API Error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEyePress = () => {
-    // Toggle the visibility of additional fields
-    updateFormState('showAdditionalFields', !formState.showAdditionalFields);
+  const handleEyePress = item => {
+    navigate('LineDetailScreen', {lineItem: item});
   };
 
   const updateFormState = (key, value) => {
@@ -61,14 +123,20 @@ const EditDataEntry = ({route}) => {
     }));
   };
 
+  const updateLineData = (index, key, value) => {
+    setLineData(prevData =>
+      prevData.map((item, i) => (i === index ? {...item, [key]: value} : item)),
+    );
+  };
+
   const getDataEntryDetails = async () => {
     try {
       setLoading(true);
       const userDataString = await appStorage.getUserData();
       const commonDetails = await appStorage.getCommonDetails();
 
-      if (!userDataString) {
-        console.error('No user data found');
+      if (!userDataString || !commonDetails) {
+        console.error('No user data or common details found');
         return;
       }
 
@@ -89,25 +157,30 @@ const EditDataEntry = ({route}) => {
 
       console.log('response---------------', response.data);
 
-      // Extract header data from the response
-      const header = response.data.data.header[0];
-
-      // Update formState with the extracted header data
-      setFormState(prevState => ({
-        ...prevState,
-        natureOfBusiness: header.naturE_OF_BUSINESS || '',
-        lineOfBusiness: header.linE_OF_BUSINESS || '',
-        remainingQty: header.remaininG_QTY?.toString() || '',
-        breedName: header.breeD_NAME || '',
-        templateName: header.templatE_NAME || '',
-        postingDate: header.p_DATE || '',
-        subLocationName: header.locatioN_NAME || '',
-        ageDays: header.agE_DAYS?.toString() || '',
-        ageWeek: header.agE_WEEK?.toString() || '',
-        openingQuantity: header.openinG_QTY?.toString() || '',
-        startDate: header.s_DATE || '',
-        runningCost: header.runninG_COST?.toString() || '',
-      }));
+      if (response.data?.status === 'success') {
+        const header = response.data?.data?.header?.[0];
+        const line = response.data?.data?.line || [];
+        setLineData(line);
+        setFormState(prevState => ({
+          ...prevState,
+          natureOfBusiness: header.naturE_OF_BUSINESS || '',
+          lineOfBusiness: header.linE_OF_BUSINESS || '',
+          remainingQty: header.remaininG_QTY?.toString() || '',
+          breedName: header.breeD_NAME || '',
+          templateName: header.templatE_NAME || '',
+          postingDate: header.p_DATE || '',
+          subLocationName: header.locatioN_NAME || '',
+          ageDays: header.agE_DAYS?.toString() || '',
+          ageWeek: header.agE_WEEK?.toString() || '',
+          openingQuantity: header.openinG_QTY?.toString() || '',
+          startDate: header.s_DATE || '',
+          runningCost: header.runninG_COST?.toString() || '',
+          batch_No: header.batcH_NO || '',
+        }));
+      } else {
+        setErrorMessage(response.data?.message || 'Something went wrong');
+        setErrorVisible(true);
+      }
     } catch (error) {
       console.error('API Error:', error);
       throw error;
@@ -120,12 +193,40 @@ const EditDataEntry = ({route}) => {
     getDataEntryDetails();
   }, []);
 
+  const renderLineItem = ({item, index}) => (
+    <View style={styles.section} key={index}>
+      <View style={styles.sectionTitleHeader}>
+        <Text style={styles.sectionTitle}>{item.parameteR_NAME || ''}</Text>
+        <TouchableOpacity onPress={() => handleEyePress(item)}>
+          <Icon name="eye" size={20} color="#000" />
+        </TouchableOpacity>
+      </View>
+      <CustomInput
+        label="Item Name"
+        value={item.iteM_NAME}
+        onChangeText={text => updateLineData(index, 'iteM_NAME', text)}
+        editable={false}
+      />
+      <CustomInput
+        label="Total Units"
+        value={item.actuaL_VALUE?.toString()} // Ensure the value is a string
+        onChangeText={text => updateLineData(index, 'actuaL_VALUE', text)}
+      />
+      <CustomInput
+        label="Cost Per Unit"
+        value={item.uniT_COST?.toString()} // Ensure the value is a string
+        onChangeText={text => updateLineData(index, 'uniT_COST', text)}
+        editable={item.parameteR_NAME === 'Descriptive' ? false : true}
+      />
+    </View>
+  );
+
   return (
     <>
       <HeaderWithBtn title="Data Entry" />
       <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
         <View style={styles.headerContainer}>
-          <Text style={styles.headerText}>HEADER (B00010-RECEIVED G...)</Text>
+          <Text style={styles.headerText}>HEADER ({formState.batch_No})</Text>
           <TouchableOpacity
             style={styles.toggleButton}
             onPress={() =>
@@ -145,43 +246,43 @@ const EditDataEntry = ({route}) => {
               label="Nature Of Business"
               value={formState.natureOfBusiness}
               onChangeText={text => updateFormState('natureOfBusiness', text)}
-              editable={false} // Disable the input field
-              style={styles.disabledInput} // Apply disabled background color
+              editable={false}
+              style={styles.disabledInput}
             />
             <CustomInput
               label="Line Of Business"
               value={formState.lineOfBusiness}
               onChangeText={text => updateFormState('lineOfBusiness', text)}
-              editable={false} // Disable the input field
-              style={styles.disabledInput} // Apply disabled background color
+              editable={false}
+              style={styles.disabledInput}
             />
             <CustomInput
               label="Remaining Qty"
               value={formState.remainingQty}
               onChangeText={text => updateFormState('remainingQty', text)}
-              editable={false} // Disable the input field
-              style={styles.disabledInput} // Apply disabled background color
+              editable={false}
+              style={styles.disabledInput}
             />
             <CustomInput
               label="Breed Name"
               value={formState.breedName}
               onChangeText={text => updateFormState('breedName', text)}
-              editable={false} // Disable the input field
-              style={styles.disabledInput} // Apply disabled background color
+              editable={false}
+              style={styles.disabledInput}
             />
             <CustomInput
               label="Template Name"
               value={formState.templateName}
               onChangeText={text => updateFormState('templateName', text)}
-              editable={false} // Disable the input field
-              style={styles.disabledInput} // Apply disabled background color
+              editable={false}
+              style={styles.disabledInput}
             />
             <CustomInput
               label="Posting Date"
               value={formState.postingDate}
               onChangeText={text => updateFormState('postingDate', text)}
-              editable={false} // Disable the input field
-              style={styles.disabledInput} // Apply disabled background color
+              editable={false}
+              style={styles.disabledInput}
             />
             {formState.showAdditionalFields && (
               <>
@@ -191,22 +292,22 @@ const EditDataEntry = ({route}) => {
                   onChangeText={text =>
                     updateFormState('subLocationName', text)
                   }
-                  editable={false} // Disable the input field
-                  style={styles.disabledInput} // Apply disabled background color
+                  editable={false}
+                  style={styles.disabledInput}
                 />
                 <CustomInput
                   label="Age (Days)"
                   value={formState.ageDays}
                   onChangeText={text => updateFormState('ageDays', text)}
-                  editable={false} // Disable the input field
-                  style={styles.disabledInput} // Apply disabled background color
+                  editable={false}
+                  style={styles.disabledInput}
                 />
                 <CustomInput
                   label="Age (Week)"
                   value={formState.ageWeek}
                   onChangeText={text => updateFormState('ageWeek', text)}
-                  editable={false} // Disable the input field
-                  style={styles.disabledInput} // Apply disabled background color
+                  editable={false}
+                  style={styles.disabledInput}
                 />
                 <CustomInput
                   label="Opening Quantity"
@@ -214,28 +315,34 @@ const EditDataEntry = ({route}) => {
                   onChangeText={text =>
                     updateFormState('openingQuantity', text)
                   }
-                  editable={false} // Disable the input field
-                  style={styles.disabledInput} // Apply disabled background color
+                  editable={false}
+                  style={styles.disabledInput}
                 />
                 <CustomInput
                   label="Start Date"
                   value={formState.startDate}
                   onChangeText={text => updateFormState('startDate', text)}
-                  editable={false} // Disable the input field
-                  style={styles.disabledInput} // Apply disabled background color
+                  editable={false}
+                  style={styles.disabledInput}
                 />
                 <CustomInput
                   label="Running Cost"
                   value={formState.runningCost}
                   onChangeText={text => updateFormState('runningCost', text)}
-                  editable={false} // Disable the input field
-                  style={styles.disabledInput} // Apply disabled background color
+                  editable={false}
+                  style={styles.disabledInput}
                 />
               </>
             )}
             <View style={styles.sectionTitleHeader}>
               <Text style={styles.sectionTitle}></Text>
-              <TouchableOpacity onPress={handleEyePress}>
+              <TouchableOpacity
+                onPress={() =>
+                  updateFormState(
+                    'showAdditionalFields',
+                    !formState.showAdditionalFields,
+                  )
+                }>
                 <Icon
                   name={formState.showAdditionalFields ? 'eye-slash' : 'eye'}
                   size={20}
@@ -246,109 +353,13 @@ const EditDataEntry = ({route}) => {
           </View>
         )}
 
-        {/* <View style={styles.headerContainer}>
-          <Text style={styles.headerText}>LINE DETAIL</Text>
-          <TouchableOpacity
-            style={styles.toggleButton}
-            onPress={() =>
-              updateFormState('isLineVisible', !formState.isLineVisible)
-            }>
-            <Icon
-              name={formState.isLineVisible ? 'minus' : 'plus'}
-              size={16}
-              color="#fff"
-            />
-          </TouchableOpacity>
-        </View> */}
-
         <DataEntryAddLine />
         <View style={styles.lineDetail}>
-          <View style={styles.section}>
-            <View style={styles.sectionTitleHeader}>
-              <Text style={styles.sectionTitle}>MORTALITY</Text>
-              <TouchableOpacity onPress={() => handleEyePress('Mortality')}>
-                <Icon name="eye" size={20} color="#000" />
-              </TouchableOpacity>
-            </View>
-            <CustomInput
-              label="Item Name"
-              value={formState.mortality.itemName}
-              onChangeText={text =>
-                updateFormState('mortality', {
-                  ...formState.mortality,
-                  itemName: text,
-                })
-              }
-            />
-            <CustomInput
-              label="Total Units (PCS)"
-              value={formState.mortality.totalUnits}
-              onChangeText={text =>
-                updateFormState('mortality', {
-                  ...formState.mortality,
-                  totalUnits: text,
-                })
-              }
-            />
-          </View>
-
-          <View style={styles.section}>
-            <View style={styles.sectionTitleHeader}>
-              <Text style={styles.sectionTitle}>FEED-INPUT</Text>
-              <TouchableOpacity onPress={() => handleEyePress('FeedInput1')}>
-                <Icon name="eye" size={20} color="#000" />
-              </TouchableOpacity>
-            </View>
-            <CustomInput
-              label="Item Name"
-              value={formState.feedInput1.itemName}
-              onChangeText={text =>
-                updateFormState('feedInput1', {
-                  ...formState.feedInput1,
-                  itemName: text,
-                })
-              }
-            />
-            <CustomInput
-              label="Total Units (KG)"
-              value={formState.feedInput1.totalUnits}
-              onChangeText={text =>
-                updateFormState('feedInput1', {
-                  ...formState.feedInput1,
-                  totalUnits: text,
-                })
-              }
-            />
-          </View>
-
-          <View style={styles.section}>
-            <View style={styles.sectionTitleHeader}>
-              <Text style={styles.sectionTitle}>FEED-INPUT</Text>
-              <TouchableOpacity onPress={() => handleEyePress('FeedInput2')}>
-                <Icon name="eye" size={20} color="#000" />
-              </TouchableOpacity>
-            </View>
-            <CustomInput
-              label="Item Name"
-              value={formState.feedInput2.itemName}
-              onChangeText={text =>
-                updateFormState('feedInput2', {
-                  ...formState.feedInput2,
-                  itemName: text,
-                })
-              }
-            />
-            <CustomInput
-              label="Total Units (KG)"
-              value={formState.feedInput2.totalUnits}
-              onChangeText={text =>
-                updateFormState('feedInput2', {
-                  ...formState.feedInput2,
-                  totalUnits: text,
-                })
-              }
-            />
-          </View>
+          <FlatList
+            data={lineData}
+            renderItem={renderLineItem}
+            keyExtractor={(item, index) => index.toString()}
+          />
         </View>
 
         <View style={styles.buttonContainer}>
@@ -360,6 +371,11 @@ const EditDataEntry = ({route}) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <ErrorModal
+        visible={errorVisible}
+        onClose={() => setErrorVisible(false)}
+        message={errorMessage}
+      />
     </>
   );
 };
@@ -392,7 +408,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerDetails: {
-    // backgroundColor: '#fff',
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
@@ -444,7 +459,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   disabledInput: {
-    backgroundColor: '#f0f0f0', // Light gray background color for disabled inputs
+    backgroundColor: '#f0f0f0',
   },
 });
 

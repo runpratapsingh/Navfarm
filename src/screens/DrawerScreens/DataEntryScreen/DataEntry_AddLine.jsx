@@ -130,7 +130,7 @@ export default function DataEntryAddLine() {
           />
         </TouchableOpacity>
       </View>
-      {isFormVisible && (
+      {/* {isFormVisible && (
         <View style={{padding: 16}}>
           <Dropdown
             style={styles.dropdown}
@@ -201,7 +201,7 @@ export default function DataEntryAddLine() {
           </TouchableOpacity>
           <View style={styles.divider} />
         </View>
-      )}
+      )} */}
     </ScrollView>
   );
 }
