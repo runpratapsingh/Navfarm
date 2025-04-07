@@ -2,17 +2,14 @@ import React, {useState} from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
-  FlatList,
   ScrollView,
   StyleSheet,
   StatusBar,
   Dimensions,
 } from 'react-native';
-import {Dropdown} from 'react-native-element-dropdown';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import {COLORS} from '../../../theme/theme';
+import {COLORS} from '../../../../theme/theme';
 const {width} = Dimensions.get('window');
 
 // Define parameter types for the dropdown

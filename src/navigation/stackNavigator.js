@@ -4,18 +4,18 @@ import DrawerNavigation from './DrawerNavigation';
 import SignInScreen from '../screens/auth/LoginScreen';
 import SplashScreen from '../screens/Splace/SplaceScreen';
 import OtpVerification from '../screens/auth/OtpVerification';
-import DataEntryScreen from '../screens/DrawerScreens/DataEntryScreen/DataEntry_AddLine';
 import CategorySelection from '../screens/CategorySelectionScreen/CategorySelection';
-import LineDetailScreen from '../screens/DrawerScreens/DataEntryScreen/LineDetails';
-import EditDataEntry from '../screens/DrawerScreens/DataEntryScreen/EditDataEntry';
 import PaymentScreen from '../screens/auth/PaymentScreen';
+import EditDataEntry from '../screens/DrawerScreens/DataEntryScreen/DataEntry/EditDataEntry';
+import DataEntryScreen from '../screens/DrawerScreens/DataEntryScreen/DataEntry';
+import LineDetailScreen from '../screens/DrawerScreens/DataEntryScreen/DataEntry/LineDetails';
 
 const Stack = createStackNavigator();
 
 function MyStack() {
   return (
     <Stack.Navigator
-      initialRouteName="payment"
+      initialRouteName="splace"
       screenOptions={{headerShown: false}}>
       <Stack.Screen
         options={{headerShown: false}}

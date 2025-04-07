@@ -6,18 +6,17 @@ import {
   StyleSheet,
   ScrollView,
   FlatList,
-  StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import {COLORS} from '../../../theme/theme';
-import CustomInput from '../../../components/CustumInputField';
-import HeaderWithBtn from '../../../components/HeaderWithBackBtn';
-import {appStorage} from '../../../utils/services/StorageHelper';
-import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
-import api from '../../../Apiconfig/ApiconfigWithInterceptor';
+import {COLORS} from '../../../../theme/theme';
+import CustomInput from '../../../../components/CustumInputField';
+import HeaderWithBtn from '../../../../components/HeaderWithBackBtn';
+import {appStorage} from '../../../../utils/services/StorageHelper';
+import {API_ENDPOINTS} from '../../../../Apiconfig/Apiconfig';
+import api from '../../../../Apiconfig/ApiconfigWithInterceptor';
 import DataEntryAddLine from './DataEntry_AddLine';
-import {navigate} from '../../../utils/services/NavigationService';
-import ErrorModal from '../../../components/CustumModal';
+import {navigate} from '../../../../utils/services/NavigationService';
+import ErrorModal from '../../../../components/CustumModal';
 
 const EditDataEntry = ({route}) => {
   const {batch_id} = route.params;
@@ -38,6 +37,11 @@ const EditDataEntry = ({route}) => {
     startDate: '',
     runningCost: '',
     batch_No: '',
+    nob_id: 0, // Add default values for new fields
+    lob_id: 0,
+    template_id: 0,
+    location: 0,
+    CREATED_BY: 0,
   });
   const [lineData, setLineData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -55,22 +59,150 @@ const EditDataEntry = ({route}) => {
         return;
       }
 
-      const updatedData = {
-        ...formState,
-        lineData,
-        batch_id,
-        company_id: userData.companY_ID,
+      const header = {
+        DATAENTRY_ID: 0,
+        NOB_ID: parseInt(formState.nob_id),
+        NATURE_OF_BUSINESS: formState.natureOfBusiness,
+        LOB_ID: parseInt(formState.lob_id),
+        LINE_OF_BUSINESS: formState.lineOfBusiness,
+        BATCH_ID: formState.batch_id?.toString(),
+        BATCH_NO: formState.batch_No,
+        BREED_NAME: formState.breedName,
+        TEMPLATE_NAME: formState.templateName,
+        TEMPLATE_ID: parseInt(formState.template_id),
+        LOCATION_NAME: formState.subLocationName,
+        POSTING_DATE: formState.postingDate,
+        AGE_DAYS: formState.ageDays.toString(),
+        AGE_WEEK: formState.ageWeek.toString(),
+        OPENING_QTY: formState.openingQuantity.toString(),
+        START_DATE: formState.startDate,
+        RUNNING_COST: formState.runningCost.toString(),
+        CREATED_BY: parseInt(formState.CREATED_BY) || 0,
+        company_id: userData.companY_ID?.toString(),
+        status: 'posted',
+        LOCATION: formState.location?.toString(),
+        ENTRY_FROM: 'Web',
+        CURRENT_LOCATION: '',
+        CHK_in_lat: '',
+        CHK_in_long: '',
+        REMARK: '',
       };
 
-      console.log('Saving data:', updatedData);
+      const lines = lineData.map(item => ({
+        PARAMETER_TYPE: item.parameteR_TYPE,
+        PARAMETER_TYPE_ID: parseInt(item.parameteR_TYPE_ID),
+        PARAMETER_NAME: item.parameteR_NAME,
+        ACTUAL_VALUE: item.actuaL_VALUE?.toString() || '0',
+        UNIT_COST: item.uniT_COST?.toString() || '0',
+        DATAENTRY_TYPE_ID: parseInt(item.dataentrY_TYPE_ID),
+        DATAENTRY_TYPE: item.dataentrY_TYPE,
+        DATAENTRY_UOM: item.dataentrY_UOM,
+        OCCURRENCE: item.occurrence,
+        FREQUENCY_START_DATE: item.frequencY_START_DATE?.toString() || '0',
+        FREQUENCY_END_DATE: item.frequencY_END_DATE?.toString() || '0',
+        ITEM_NAME: item.iteM_NAME,
+        LINE_AMOUNT: parseFloat(item.linE_AMOUNT) || 0.0,
+        PARAMETER_ID: parseInt(item.parameteR_ID),
+        FORMULA_FLAG: item.formulA_FLAG || '',
+        ITEM_ID: parseInt(item.iteM_ID),
+        Parameter_input_type: item.parameter_input_type || '',
+        Parameter_input_format: item.parameter_input_format || '',
+        Parameter_input_value: item.parameter_input_value || '',
+      }));
 
-      // const response = await api.post(API_ENDPOINTS.SaveDataEntry, updatedData);
+      const updatedData = {
+        header,
+        lines,
+        livestock: [], // Assuming livestock is not used in this case
+      };
 
-      // if (response.data?.status === 'success') {
-      //   console.log('Data saved successfully:', response.data);
-      // } else {
-      //   console.error('Failed to save data:', response.data);
-      // }
+      // const updatedData = {
+      //   header: {
+      //     DATAENTRY_ID: 0,
+      //     NOB_ID: 1,
+      //     NATURE_OF_BUSINESS: 'Poultry',
+      //     LOB_ID: 3,
+      //     LINE_OF_BUSINESS: 'Commercial Broiler',
+      //     BATCH_ID: '2658',
+      //     BATCH_NO: 'B00002',
+      //     BREED_NAME: 'KarakNath',
+      //     TEMPLATE_NAME: 'CB.Test',
+      //     TEMPLATE_ID: 534,
+      //     LOCATION_NAME: 'Delhi 1 Sub Location M',
+      //     POSTING_DATE: '10-Aug-2023',
+      //     AGE_DAYS: '3',
+      //     AGE_WEEK: '0',
+      //     OPENING_QTY: '1',
+      //     START_DATE: '07-Aug-2023',
+      //     RUNNING_COST: '40',
+      //     CREATED_BY: 762,
+      //     company_id: '261',
+      //     status: 'posted',
+      //     LOCATION: '1',
+      //     ENTRY_FROM: 'Web',
+      //     CURRENT_LOCATION: '',
+      //     CHK_in_lat: '',
+      //     CHK_in_long: '',
+      //     REMARK: '',
+      //   },
+      //   lines: [
+      //     {
+      //       PARAMETER_TYPE: 'Consumption',
+      //       PARAMETER_TYPE_ID: 1,
+      //       PARAMETER_NAME: 'Test7Sep',
+      //       ACTUAL_VALUE: '0',
+      //       UNIT_COST: '20',
+      //       DATAENTRY_TYPE_ID: 290,
+      //       DATAENTRY_TYPE: 'Mortality',
+      //       DATAENTRY_UOM: 'NOS',
+      //       OCCURRENCE: 'Daily',
+      //       FREQUENCY_START_DATE: '0',
+      //       FREQUENCY_END_DATE: '30',
+      //       ITEM_NAME: 'bird1 - IN0001',
+      //       LINE_AMOUNT: 0.0,
+      //       PARAMETER_ID: 1922,
+      //       FORMULA_FLAG: '',
+      //       ITEM_ID: 37752,
+      //       Parameter_input_type: '',
+      //       Parameter_input_format: '',
+      //       Parameter_input_value: '',
+      //     },
+      //     {
+      //       PARAMETER_TYPE: 'Direct/Indirect Cost',
+      //       PARAMETER_TYPE_ID: 2,
+      //       PARAMETER_NAME: 'Labour Expense',
+      //       ACTUAL_VALUE: '0',
+      //       UNIT_COST: '0',
+      //       DATAENTRY_TYPE_ID: 287,
+      //       DATAENTRY_TYPE: 'Blank',
+      //       DATAENTRY_UOM: 'HRS',
+      //       OCCURRENCE: 'Daily',
+      //       FREQUENCY_START_DATE: '0',
+      //       FREQUENCY_END_DATE: '30',
+      //       ITEM_NAME: 'Labour Expense - RC0001',
+      //       LINE_AMOUNT: 0.0,
+      //       PARAMETER_ID: 1826,
+      //       FORMULA_FLAG: '',
+      //       ITEM_ID: 15,
+      //       Parametr_input_type: '',
+      //       Parameter_input_format: '',
+      //       Parameter_input_value: '',
+      //     },
+      //   ],
+      //   livestock: [],
+      // };
+      console.log('Saving data:----------------->', updatedData);
+
+      // Uncomment the following lines when ready to test the API call
+      const response = await api.post(
+        API_ENDPOINTS.SaveAndPostDataEntry,
+        updatedData,
+      );
+      if (response.data?.status === 'success') {
+        console.log('Data saved successfully:', response.data);
+      } else {
+        console.error('Failed to save data:', response.data);
+      }
     } catch (error) {
       console.error('API Error:', error);
     } finally {
@@ -176,6 +308,12 @@ const EditDataEntry = ({route}) => {
           startDate: header.s_DATE || '',
           runningCost: header.runninG_COST?.toString() || '',
           batch_No: header.batcH_NO || '',
+          nob_id: header.noB_ID || 0, // Set the new fields
+          lob_id: header.loB_ID || 0,
+          template_id: header.templatE_ID || 0,
+          location: header.locatioN_ID || 0,
+          batch_id: header.batcH_ID?.toString(),
+          CREATED_BY: header.createD_BY?.toString(),
         }));
       } else {
         setErrorMessage(response.data?.message || 'Something went wrong');

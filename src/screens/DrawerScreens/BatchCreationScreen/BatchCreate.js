@@ -3,11 +3,17 @@ import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {COLORS} from '../../../theme/theme';
 import HeaderWithBtn from '../../../components/HeaderWithBackBtn';
+import Header from '../../../components/HeaderComp';
 
 const BatchCreation = () => {
   return (
     <>
-      <HeaderWithBtn title="Batch Creation" />
+      {/* <HeaderWithBtn title="Batch Creation" /> */}
+      <Header
+        title="Batch Creation"
+        onFilterPress={() => navigation.openDrawer()}
+      />
+
       <View style={styles.comingSoonContainer}>
         <Icon name="rocket" size={60} color={COLORS.SecondaryColor} />
         <Text style={styles.comingSoonTitle}>Coming Soon</Text>

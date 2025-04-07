@@ -17,7 +17,7 @@ import {appStorage} from '../../../utils/services/StorageHelper';
 import api from '../../../Apiconfig/ApiconfigWithInterceptor';
 import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
 import {navigate} from '../../../utils/services/NavigationService';
-import LinkedDropdowns from './DataEntryHistory';
+import LinkedDropdowns from './DataHistory/DataEntryHistory';
 
 const mainTabs = ['Data Entry', 'Data Entry History'];
 
@@ -27,17 +27,6 @@ const DataEntryScreen = () => {
   const [expanded, setExpanded] = useState(null);
   const [loading, setLoading] = useState(false);
   const [batchData, setBatchData] = useState([]);
-
-  const translateX = useRef(new Animated.Value(0)).current;
-
-  const handleSwipe = event => {
-    const {translationX} = event.nativeEvent;
-    if (translationX < -50 && activeMainTab !== 'Data Entry History') {
-      setActiveMainTab('Data Entry History');
-    } else if (translationX > 50 && activeMainTab !== 'Data Entry') {
-      setActiveMainTab('Data Entry');
-    }
-  };
 
   const getDashboardData = async () => {
     try {
@@ -140,32 +129,34 @@ const DataEntryScreen = () => {
   );
 
   return (
-    <PanGestureHandler onHandlerStateChange={handleSwipe}>
-      <Animated.View style={styles.container}>
-        {/* Status Bar */}
-        <StatusBar
-          barStyle="light-content"
-          backgroundColor={COLORS.primaryColor}
-        />
+    <Animated.View style={styles.container}>
+      {/* Status Bar */}
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={COLORS.primaryColor}
+      />
 
-        {/* Header Component */}
-        <Header onFilterPress={() => navigation.openDrawer()} />
-        {/* Main Tabs */}
-        <View style={styles.tabsContainer}>
-          {mainTabs.map(tab => (
-            <TouchableOpacity
-              style={styles.tabContainer}
-              key={tab}
-              onPress={() => setActiveMainTab(tab)}>
-              <Text
-                style={[styles.tab, activeMainTab === tab && styles.activeTab]}>
-                {tab}
-              </Text>
-              {activeMainTab === tab && <View style={styles.activeTabBorder} />}
-            </TouchableOpacity>
-          ))}
-        </View>
-
+      {/* Header Component */}
+      <Header
+        title="Data Entry Summary"
+        onFilterPress={() => navigation.openDrawer()}
+      />
+      {/* Main Tabs */}
+      <View style={styles.tabsContainer}>
+        {mainTabs.map(tab => (
+          <TouchableOpacity
+            style={styles.tabContainer}
+            key={tab}
+            onPress={() => setActiveMainTab(tab)}>
+            <Text
+              style={[styles.tab, activeMainTab === tab && styles.activeTab]}>
+              {tab}
+            </Text>
+            {activeMainTab === tab && <View style={styles.activeTabBorder} />}
+          </TouchableOpacity>
+        ))}
+      </View>
+      <View style={{flex: 1}}>
         {activeMainTab === 'Data Entry' && (
           <FlatList
             contentContainerStyle={styles.flatListContainer}
@@ -175,8 +166,8 @@ const DataEntryScreen = () => {
           />
         )}
         {activeMainTab === 'Data Entry History' && <LinkedDropdowns />}
-      </Animated.View>
-    </PanGestureHandler>
+      </View>
+    </Animated.View>
   );
 };
 

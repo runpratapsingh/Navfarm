@@ -1,7 +1,7 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
-import CustomInput from '../../../components/CustumInputField';
-import HeaderWithBtn from '../../../components/HeaderWithBackBtn';
+import {View, StyleSheet} from 'react-native';
+import HeaderWithBtn from '../../../../components/HeaderWithBackBtn';
+import CustomInput from '../../../../components/CustumInputField';
 
 const LineDetailScreen = ({route}) => {
   const {lineItem} = route.params;

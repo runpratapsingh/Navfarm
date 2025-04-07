@@ -1,6 +1,13 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import CustomDropdown from '../../../components/DataEntryHistoryCustumDropdown';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import CustomDropdown from '../../../../components/DataEntryHistoryCustumDropdown';
+import DataEntryHistorySearchedEntry from './DataEntryHistorySearchedEntry';
 
 const LinkedDropdowns = () => {
   const [nature, setNature] = useState('');
@@ -74,7 +81,7 @@ const LinkedDropdowns = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
       <CustomDropdown
         label="Nature of Business"
         selectedValue={nature}
@@ -111,13 +118,16 @@ const LinkedDropdowns = () => {
       <TouchableOpacity style={styles.searchButton}>
         <Text style={styles.searchText}>Search</Text>
       </TouchableOpacity>
-    </View>
+      <View style={styles.SearchedItemContainer}>
+        <DataEntryHistorySearchedEntry />
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 16,
     backgroundColor: '#F8F9FA',
   },
   title: {
@@ -149,6 +159,9 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  SearchedItemContainer: {
+    marginTop: 20,
   },
 });
 

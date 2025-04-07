@@ -3,7 +3,7 @@ import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import {COLORS} from '../theme/theme';
 
-const Header = ({onFilterPress}) => {
+const Header = ({onFilterPress, title}) => {
   return (
     <View style={styles.headerContainer}>
       <View style={{flexDirection: 'row', alignItems: 'center'}}>
@@ -12,7 +12,7 @@ const Header = ({onFilterPress}) => {
           <Icon name="bars" size={20} color="white" style={{marginRight: 10}} />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Data Entry Summary</Text>
+        <Text style={styles.headerTitle}>{title || ''}</Text>
       </View>
       <TouchableOpacity>
         <Icon name="bell" size={20} color="white" />

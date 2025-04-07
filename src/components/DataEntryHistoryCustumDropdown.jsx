@@ -1,5 +1,6 @@
 import {Dropdown} from 'react-native-element-dropdown';
 import {Text, View, ActivityIndicator, StyleSheet} from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 const CustomDropdown = ({
   label,
@@ -22,6 +23,9 @@ const CustomDropdown = ({
           placeholder="Select"
           value={selectedValue}
           onChange={item => onValueChange(item.id)}
+          renderRightIcon={visible => (
+            <Icon name={visible ? 'chevron-up' : 'chevron-down'} />
+          )}
         />
       )}
     </View>

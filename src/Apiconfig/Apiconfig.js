@@ -14,4 +14,5 @@ export const API_ENDPOINTS = {
   Dashboard_NOB: '/Get_Configuration_Setup',
   DataEntryList: '/get_dataentry_summary',
   DataEntryDetails: '/get_dataentry_details',
+  SaveAndPostDataEntry: '/insert_dataentry',
 };
