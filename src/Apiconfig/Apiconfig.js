@@ -15,4 +15,5 @@ export const API_ENDPOINTS = {
   DataEntryList: '/get_dataentry_summary',
   DataEntryDetails: '/get_dataentry_details',
   SaveAndPostDataEntry: '/insert_dataentry',
+  DataEntrySearchedDetails: '/get_dataentry_details_json',
 };

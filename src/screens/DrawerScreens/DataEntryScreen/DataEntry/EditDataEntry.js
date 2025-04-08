@@ -287,7 +287,7 @@ const EditDataEntry = ({route}) => {
         },
       });
 
-      console.log('response---------------', response.data);
+      console.log('response---------------', response.data, batch_id);
 
       if (response.data?.status === 'success') {
         const header = response.data?.data?.header?.[0];

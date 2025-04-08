@@ -1,13 +1,20 @@
-import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import React, {useState, useEffect, useMemo, useCallback} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {COLORS} from '../../../../theme/theme';
 import CustomInput from '../../../../components/CustumInputField';
 
-const DataEntryHistorySearchedEntry = () => {
+const {height, width} = Dimensions.get('window');
+const DataEntryHistorySearchedEntry = ({data}) => {
   const [formState, setFormState] = useState({
     isHeaderVisible: false,
-    isLineVisible: true,
     showAdditionalFields: false,
     natureOfBusiness: '',
     lineOfBusiness: '',
@@ -24,64 +31,121 @@ const DataEntryHistorySearchedEntry = () => {
     batch_No: '',
   });
 
-  const [tableData, setTableData] = useState([
-    {postingDate: '2023-10-01', feed: 'Feed A', remark: 'IN0002'},
-    {postingDate: '2023-10-02', feed: 'Feed B', remark: 'IN0003'},
-    {postingDate: '2023-10-03', feed: 'Feed C', remark: 'IN0004'},
-    // Add more data for testing pagination
-    ...Array.from({length: 20}, (_, i) => ({
-      postingDate: `2023-10-${String(i + 4).padStart(2, '0')}`,
-      feed: `Feed ${String.fromCharCode(65 + i)}`,
-      remark: `IN${String(1004 + i).padStart(4, '0')}`,
-    })),
-  ]);
-
+  const [tableData, setTableData] = useState([]);
+  const [tableHeaders, setTableHeaders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: 'ascending',
+  });
   const itemsPerPage = 10;
 
-  const updateFormState = (key, value) => {
+  useEffect(() => {
+    if (data?.result?.length > 0) {
+      const header = data.header[0];
+      setFormState(prevState => ({
+        ...prevState,
+        natureOfBusiness: header?.naturE_OF_BUSINESS || '',
+        lineOfBusiness: header?.linE_OF_BUSINESS || '',
+        remainingQty: header?.remaininG_QTY?.toString() || '',
+        breedName: header?.breeD_NAME || '',
+        templateName: header?.templatE_NAME || '',
+        postingDate: header?.p_DATE || '',
+        subLocationName: header?.locatioN_NAME || '',
+        ageDays: header?.agE_DAYS?.toString() || '',
+        ageWeek: header?.agE_WEEK?.toString() || '',
+        openingQuantity: header?.openinG_QTY?.toString() || '',
+        startDate: header?.s_DATE || '',
+        runningCost: header?.runninG_COST?.toString() || '',
+        batch_No: header?.batcH_NO || '',
+      }));
+
+      const parsedTableData = JSON.parse(data.result);
+      const headers = Object.keys(parsedTableData[0]).map(key => ({
+        key,
+        label: key,
+      }));
+
+      setTableHeaders(headers);
+      setTableData(parsedTableData);
+    }
+  }, [data]);
+
+  const updateFormState = useCallback((key, value) => {
     setFormState(prevState => ({
       ...prevState,
       [key]: value,
     }));
-  };
+  }, []);
 
-  const totalPages = Math.ceil(tableData.length / itemsPerPage);
+  const totalPages = useMemo(
+    () => Math.ceil(tableData.length / itemsPerPage),
+    [tableData.length],
+  );
 
-  const handlePageChange = page => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+  const handlePageChange = useCallback(
+    page => {
+      if (page >= 1 && page <= totalPages) {
+        setCurrentPage(page);
+      }
+    },
+    [totalPages],
+  );
+
+  const handleSort = useCallback(
+    key => {
+      let direction = 'ascending';
+      if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+        direction = 'descending';
+      }
+      setSortConfig({key, direction});
+    },
+    [sortConfig],
+  );
+
+  const sortedData = useMemo(() => {
+    if (!sortConfig.key) return tableData;
+
+    const sorted = [...tableData].sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === 'ascending' ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === 'ascending' ? 1 : -1;
+      }
+      return 0;
+    });
+
+    return sorted;
+  }, [tableData, sortConfig]);
+
+  const getPaginatedData = useMemo(() => {
+    if (sortedData.length === 0) {
+      return [];
     }
-  };
-
-  const getPaginatedData = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return tableData.slice(startIndex, startIndex + itemsPerPage);
-  };
+    return sortedData.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedData, currentPage]);
 
-  const renderPageNumbers = () => {
-    const pageNumbers = [];
-    for (let i = 1; i <= totalPages; i++) {
-      pageNumbers.push(
-        <TouchableOpacity
-          key={i}
+  const renderPageNumbers = useMemo(() => {
+    return Array.from({length: totalPages}, (_, i) => (
+      <TouchableOpacity
+        key={i + 1}
+        style={[
+          styles.pageNumber,
+          currentPage === i + 1 && styles.activePageNumber,
+        ]}
+        onPress={() => handlePageChange(i + 1)}>
+        <Text
           style={[
-            styles.pageNumber,
-            currentPage === i && styles.activePageNumber,
-          ]}
-          onPress={() => handlePageChange(i)}>
-          <Text
-            style={[
-              styles.pageNumberText,
-              currentPage === i && styles.activePageNumberText,
-            ]}>
-            {i}
-          </Text>
-        </TouchableOpacity>,
-      );
-    }
-    return pageNumbers;
-  };
+            styles.pageNumberText,
+            currentPage === i + 1 && styles.activePageNumberText,
+          ]}>
+          {i + 1}
+        </Text>
+      </TouchableOpacity>
+    ));
+  }, [totalPages, currentPage, handlePageChange]);
 
   return (
     <View style={styles.container}>
@@ -209,28 +273,41 @@ const DataEntryHistorySearchedEntry = () => {
         </View>
       )}
 
-      {/* Table Section */}
-      <View style={styles.tableContainer}>
-        <View style={[styles.tableRow, styles.tableHeaderRow]}>
-          <Text style={styles.tableHeader}>Posting Date</Text>
-          <Text style={styles.tableHeader}>Feed</Text>
-          <Text style={styles.tableHeader}>Remark</Text>
-        </View>
-        {getPaginatedData().map((item, index) => (
-          <View
-            style={[
-              styles.tableRow,
-              index % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd,
-            ]}
-            key={index}>
-            <Text style={styles.tableCell}>{item.postingDate}</Text>
-            <Text style={styles.tableCell}>{item.feed}</Text>
-            <Text style={styles.tableCell}>{item.remark}</Text>
+      <ScrollView horizontal style={styles.tableContainer}>
+        <View>
+          <View style={[styles.tableRow, styles.tableHeaderRow]}>
+            {tableHeaders.map((header, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.tableHeaderCell}
+                onPress={() => handleSort(header.key)}>
+                <Text style={styles.tableHeader}>
+                  {header.label}
+                  {sortConfig.key === header.key &&
+                    (sortConfig.direction === 'ascending' ? ' ↑' : ' ↓')}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
-        ))}
-      </View>
+          <View>
+            {getPaginatedData.map((item, rowIndex) => (
+              <View
+                style={[
+                  styles.tableRow,
+                  rowIndex % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd,
+                ]}
+                key={rowIndex}>
+                {tableHeaders.map((header, colIndex) => (
+                  <View style={styles.tableCellContainer} key={colIndex}>
+                    <Text style={styles.tableCell}>{item[header.key]}</Text>
+                  </View>
+                ))}
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
 
-      {/* Pagination Controls */}
       <View style={styles.paginationContainer}>
         <TouchableOpacity
           style={[
@@ -247,7 +324,7 @@ const DataEntryHistorySearchedEntry = () => {
             Previous
           </Text>
         </TouchableOpacity>
-        <View style={styles.pageNumbersContainer}>{renderPageNumbers()}</View>
+        <View style={styles.pageNumbersContainer}>{renderPageNumbers}</View>
         <TouchableOpacity
           style={[
             styles.paginationButton,
@@ -324,30 +401,33 @@ const styles = StyleSheet.create({
   tableContainer: {
     marginTop: 20,
     borderRadius: 8,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
   },
   tableRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
   tableHeaderRow: {
     backgroundColor: COLORS.SecondaryColor,
   },
+  tableHeaderCell: {
+    flex: 1,
+    paddingHorizontal: 10,
+    width: width * 0.3,
+  },
   tableHeader: {
     fontWeight: 'bold',
-    flex: 1,
     textAlign: 'center',
     color: '#fff',
   },
-  tableCell: {
+  tableCellContainer: {
     flex: 1,
+    paddingHorizontal: 10,
+    width: width * 0.3,
+  },
+  tableCell: {
     textAlign: 'center',
   },
   tableRowEven: {

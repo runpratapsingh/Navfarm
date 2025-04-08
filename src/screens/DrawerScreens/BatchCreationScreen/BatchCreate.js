@@ -4,8 +4,11 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import {COLORS} from '../../../theme/theme';
 import HeaderWithBtn from '../../../components/HeaderWithBackBtn';
 import Header from '../../../components/HeaderComp';
+import {useNavigation} from '@react-navigation/native';
 
 const BatchCreation = () => {
+  const navigation = useNavigation();
+
   return (
     <>
       {/* <HeaderWithBtn title="Batch Creation" /> */}

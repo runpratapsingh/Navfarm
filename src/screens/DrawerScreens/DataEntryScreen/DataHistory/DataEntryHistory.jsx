@@ -8,6 +8,8 @@ import {
 } from 'react-native';
 import CustomDropdown from '../../../../components/DataEntryHistoryCustumDropdown';
 import DataEntryHistorySearchedEntry from './DataEntryHistorySearchedEntry';
+import api from '../../../../Apiconfig/ApiconfigWithInterceptor';
+import {API_ENDPOINTS} from '../../../../Apiconfig/Apiconfig';
 
 const LinkedDropdowns = () => {
   const [nature, setNature] = useState('');
@@ -21,6 +23,9 @@ const LinkedDropdowns = () => {
   const [loadingNature, setLoadingNature] = useState(true);
   const [loadingLine, setLoadingLine] = useState(false);
   const [loadingBatch, setLoadingBatch] = useState(false);
+
+  const [searchedData, setSearchedData] = useState(null);
+  const [loadingSearchedData, setLoadingSearchedData] = useState(false);
 
   useEffect(() => {
     fetchNatureOfBusiness();
@@ -80,6 +85,28 @@ const LinkedDropdowns = () => {
     setLoadingBatch(false);
   };
 
+  const fetchDataHistorySearchedDetails = async () => {
+    setLoadingSearchedData(true);
+    try {
+      const response = await api.get(API_ENDPOINTS.DataEntrySearchedDetails, {
+        params: {
+          batch_id: '2676',
+        },
+      });
+
+      console.log('Data history searched details:', response.data.data);
+      setSearchedData(response.data.data);
+    } catch (error) {
+      console.log('Error fetching data history searched details:', error);
+    } finally {
+      setLoadingSearchedData(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDataHistorySearchedDetails();
+  }, []);
+
   return (
     <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
       <CustomDropdown
@@ -119,7 +146,9 @@ const LinkedDropdowns = () => {
         <Text style={styles.searchText}>Search</Text>
       </TouchableOpacity>
       <View style={styles.SearchedItemContainer}>
-        <DataEntryHistorySearchedEntry />
+        {loadingSearchedData === false && (
+          <DataEntryHistorySearchedEntry data={searchedData} />
+        )}
       </View>
     </ScrollView>
   );
