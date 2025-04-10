@@ -283,6 +283,7 @@ const SignInScreen = () => {
         visible={errorVisible}
         onClose={() => setErrorVisible(false)}
         message={errorMessage}
+        type="error"
       />
     </SafeAreaView>
   );

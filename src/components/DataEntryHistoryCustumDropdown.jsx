@@ -1,6 +1,7 @@
 import {Dropdown} from 'react-native-element-dropdown';
 import {Text, View, ActivityIndicator, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import {COLORS} from '../theme/theme';
 
 const CustomDropdown = ({
   label,
@@ -13,7 +14,7 @@ const CustomDropdown = ({
     <View style={styles.dropdownContainer}>
       <Text style={styles.label}>{label} *</Text>
       {loading ? (
-        <ActivityIndicator size="small" color="#0000ff" />
+        <ActivityIndicator size="small" color={COLORS.SecondaryColor} />
       ) : (
         <Dropdown
           style={styles.dropdown}

@@ -149,20 +149,22 @@ const DataEntryHistorySearchedEntry = ({data}) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>HEADER ({formState.batch_No})</Text>
-        <TouchableOpacity
-          style={styles.toggleButton}
-          onPress={() =>
-            updateFormState('isHeaderVisible', !formState.isHeaderVisible)
-          }>
-          <Icon
-            name={formState.isHeaderVisible ? 'minus' : 'plus'}
-            size={16}
-            color="#fff"
-          />
-        </TouchableOpacity>
-      </View>
+      {data && (
+        <View style={styles.headerContainer}>
+          <Text style={styles.headerText}>HEADER</Text>
+          <TouchableOpacity
+            style={styles.toggleButton}
+            onPress={() =>
+              updateFormState('isHeaderVisible', !formState.isHeaderVisible)
+            }>
+            <Icon
+              name={formState.isHeaderVisible ? 'minus' : 'plus'}
+              size={16}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {formState.isHeaderVisible && (
         <View style={styles.headerDetails}>
@@ -308,39 +310,41 @@ const DataEntryHistorySearchedEntry = ({data}) => {
         </View>
       </ScrollView>
 
-      <View style={styles.paginationContainer}>
-        <TouchableOpacity
-          style={[
-            styles.paginationButton,
-            currentPage === 1 && styles.disabledPaginationButton,
-          ]}
-          onPress={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}>
-          <Text
+      {data && (
+        <View style={styles.paginationContainer}>
+          <TouchableOpacity
             style={[
-              styles.pageNumberText1,
-              currentPage === 1 && styles.disabledPageNumberText,
-            ]}>
-            Previous
-          </Text>
-        </TouchableOpacity>
-        <View style={styles.pageNumbersContainer}>{renderPageNumbers}</View>
-        <TouchableOpacity
-          style={[
-            styles.paginationButton,
-            currentPage === totalPages && styles.disabledPaginationButton,
-          ]}
-          onPress={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}>
-          <Text
+              styles.paginationButton,
+              currentPage === 1 && styles.disabledPaginationButton,
+            ]}
+            onPress={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}>
+            <Text
+              style={[
+                styles.pageNumberText1,
+                currentPage === 1 && styles.disabledPageNumberText,
+              ]}>
+              Previous
+            </Text>
+          </TouchableOpacity>
+          <View style={styles.pageNumbersContainer}>{renderPageNumbers}</View>
+          <TouchableOpacity
             style={[
-              styles.pageNumberText1,
-              currentPage === totalPages && styles.disabledPageNumberText,
-            ]}>
-            Next
-          </Text>
-        </TouchableOpacity>
-      </View>
+              styles.paginationButton,
+              currentPage === totalPages && styles.disabledPaginationButton,
+            ]}
+            onPress={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}>
+            <Text
+              style={[
+                styles.pageNumberText1,
+                currentPage === totalPages && styles.disabledPageNumberText,
+              ]}>
+              Next
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };

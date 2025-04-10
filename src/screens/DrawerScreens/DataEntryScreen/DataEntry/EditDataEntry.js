@@ -6,6 +6,8 @@ import {
   StyleSheet,
   ScrollView,
   FlatList,
+  Modal,
+  TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {COLORS} from '../../../../theme/theme';
@@ -16,7 +18,10 @@ import {API_ENDPOINTS} from '../../../../Apiconfig/Apiconfig';
 import api from '../../../../Apiconfig/ApiconfigWithInterceptor';
 import DataEntryAddLine from './DataEntry_AddLine';
 import {navigate} from '../../../../utils/services/NavigationService';
-import ErrorModal from '../../../../components/CustumModal';
+import CustomDropdown from '../../../../components/DataEntryHistoryCustumDropdown';
+import StatusModal from '../../../../components/CustumModal';
+import {Calendar} from 'react-native-calendars';
+import CalendarComponent from '../../../../components/CalenderComp';
 
 const EditDataEntry = ({route}) => {
   const {batch_id} = route.params;
@@ -37,22 +42,153 @@ const EditDataEntry = ({route}) => {
     startDate: '',
     runningCost: '',
     batch_No: '',
-    nob_id: 0, // Add default values for new fields
+    nob_id: 0,
     lob_id: 0,
     template_id: 0,
     location: 0,
     CREATED_BY: 0,
+    DataEntryId: 0,
+    Remark: '',
+    postingStatus: '',
   });
   const [lineData, setLineData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [errorVisible, setErrorVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [visible, setVisible] = useState(false);
+  const [responseMessage, setResponseMessage] = useState('');
+  const [modalType, setModalType] = useState('error');
+  const [calendarVisible, setCalendarVisible] = useState(false);
 
-  const handleSave = async () => {
+  const formatDateForCalendar = dateStr => {
+    const [day, month, year] = dateStr.split('-');
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    const monthIndex = monthNames.indexOf(month);
+    return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${day.padStart(
+      2,
+      '0',
+    )}`;
+  };
+
+  const formatDateForDisplay = dateStr => {
+    const [year, month, day] = dateStr.split('-');
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    const monthName = monthNames[parseInt(month, 10) - 1];
+    return `${day}-${monthName}-${year}`;
+  };
+
+  const handleSubmit = async status => {
     try {
       setLoading(true);
+
+      // Validation checks header
+      if (!formState.nob_id) {
+        setModalType('error');
+        setResponseMessage("Please 'Select Nature of Business'");
+        setVisible(true);
+        return;
+      }
+      if (!formState.lob_id) {
+        setModalType('error');
+        setResponseMessage("Please select 'Line of Business'");
+        setVisible(true);
+        return;
+      }
+      if (!formState.remainingQty) {
+        setModalType('error');
+        setResponseMessage("'Remaining Quantity' can not be blank");
+        setVisible(true);
+        return;
+      }
+      if (!formState.breedName) {
+        setModalType('error');
+        setResponseMessage("'Breed Name' can not be blank");
+        setVisible(true);
+        return;
+      }
+      if (!formState.templateName) {
+        setModalType('error');
+        setResponseMessage("'Template' can not be blank");
+        setVisible(true);
+        return;
+      }
+      if (!formState.subLocationName) {
+        setModalType('error');
+        setResponseMessage("'Location Name' can not be blank");
+        setVisible(true);
+        return;
+      }
+      if (!formState.postingDate) {
+        setModalType('error');
+        setResponseMessage("'Posting Date' can not be blank");
+        setVisible(true);
+        return;
+      }
+      if (!formState.openingQuantity) {
+        setModalType('error');
+        setResponseMessage("'Opening Quantity' can not be blank");
+        setVisible(true);
+        return;
+      }
+      if (!formState.startDate) {
+        setModalType('error');
+        setResponseMessage("'Start Date' can not be blank");
+        setVisible(true);
+        return;
+      }
+      if (!formState.runningCost) {
+        setModalType('error');
+        setResponseMessage("'Running Cost' can not be blank");
+        setVisible(true);
+        return;
+      }
+
+      // Validation checks for lineData
+      for (const item of lineData) {
+        console.log('item', item);
+
+        if (!item.actuaL_VALUE?.toString()) {
+          setModalType('error');
+          setResponseMessage("'Actual Value' & 'Unit Cost' can not be blank");
+          setVisible(true);
+          return;
+        }
+        if (!item.uniT_COST?.toString()) {
+          setModalType('error');
+          setResponseMessage("'Actual Value' & 'Unit Cost' can not be blank");
+          setVisible(true);
+          return;
+        }
+      }
+
       const userDataString = await appStorage.getUserData();
       const userData = userDataString;
+
+      console.log('User data----------------->', userData);
 
       if (!userData.companY_ID) {
         console.error('Company ID is missing from user data');
@@ -60,32 +196,32 @@ const EditDataEntry = ({route}) => {
       }
 
       const header = {
-        DATAENTRY_ID: 0,
+        DATAENTRY_ID: formState.DataEntryId,
         NOB_ID: parseInt(formState.nob_id),
         NATURE_OF_BUSINESS: formState.natureOfBusiness,
         LOB_ID: parseInt(formState.lob_id),
         LINE_OF_BUSINESS: formState.lineOfBusiness,
-        BATCH_ID: formState.batch_id?.toString(),
+        BATCH_ID: batch_id?.toString(),
         BATCH_NO: formState.batch_No,
         BREED_NAME: formState.breedName,
         TEMPLATE_NAME: formState.templateName,
         TEMPLATE_ID: parseInt(formState.template_id),
         LOCATION_NAME: formState.subLocationName,
-        POSTING_DATE: formState.postingDate,
+        POSTING_DATE: formatDateForDisplay(formState.postingDate),
         AGE_DAYS: formState.ageDays.toString(),
         AGE_WEEK: formState.ageWeek.toString(),
         OPENING_QTY: formState.openingQuantity.toString(),
         START_DATE: formState.startDate,
         RUNNING_COST: formState.runningCost.toString(),
-        CREATED_BY: parseInt(formState.CREATED_BY) || 0,
+        CREATED_BY: userData.useR_ID || 0,
         company_id: userData.companY_ID?.toString(),
-        status: 'posted',
+        status: status,
         LOCATION: formState.location?.toString(),
         ENTRY_FROM: 'Web',
         CURRENT_LOCATION: '',
         CHK_in_lat: '',
         CHK_in_long: '',
-        REMARK: '',
+        REMARK: formState.Remark,
       };
 
       const lines = lineData.map(item => ({
@@ -113,130 +249,30 @@ const EditDataEntry = ({route}) => {
       const updatedData = {
         header,
         lines,
-        livestock: [], // Assuming livestock is not used in this case
+        livestock: [],
       };
 
-      // const updatedData = {
-      //   header: {
-      //     DATAENTRY_ID: 0,
-      //     NOB_ID: 1,
-      //     NATURE_OF_BUSINESS: 'Poultry',
-      //     LOB_ID: 3,
-      //     LINE_OF_BUSINESS: 'Commercial Broiler',
-      //     BATCH_ID: '2658',
-      //     BATCH_NO: 'B00002',
-      //     BREED_NAME: 'KarakNath',
-      //     TEMPLATE_NAME: 'CB.Test',
-      //     TEMPLATE_ID: 534,
-      //     LOCATION_NAME: 'Delhi 1 Sub Location M',
-      //     POSTING_DATE: '10-Aug-2023',
-      //     AGE_DAYS: '3',
-      //     AGE_WEEK: '0',
-      //     OPENING_QTY: '1',
-      //     START_DATE: '07-Aug-2023',
-      //     RUNNING_COST: '40',
-      //     CREATED_BY: 762,
-      //     company_id: '261',
-      //     status: 'posted',
-      //     LOCATION: '1',
-      //     ENTRY_FROM: 'Web',
-      //     CURRENT_LOCATION: '',
-      //     CHK_in_lat: '',
-      //     CHK_in_long: '',
-      //     REMARK: '',
-      //   },
-      //   lines: [
-      //     {
-      //       PARAMETER_TYPE: 'Consumption',
-      //       PARAMETER_TYPE_ID: 1,
-      //       PARAMETER_NAME: 'Test7Sep',
-      //       ACTUAL_VALUE: '0',
-      //       UNIT_COST: '20',
-      //       DATAENTRY_TYPE_ID: 290,
-      //       DATAENTRY_TYPE: 'Mortality',
-      //       DATAENTRY_UOM: 'NOS',
-      //       OCCURRENCE: 'Daily',
-      //       FREQUENCY_START_DATE: '0',
-      //       FREQUENCY_END_DATE: '30',
-      //       ITEM_NAME: 'bird1 - IN0001',
-      //       LINE_AMOUNT: 0.0,
-      //       PARAMETER_ID: 1922,
-      //       FORMULA_FLAG: '',
-      //       ITEM_ID: 37752,
-      //       Parameter_input_type: '',
-      //       Parameter_input_format: '',
-      //       Parameter_input_value: '',
-      //     },
-      //     {
-      //       PARAMETER_TYPE: 'Direct/Indirect Cost',
-      //       PARAMETER_TYPE_ID: 2,
-      //       PARAMETER_NAME: 'Labour Expense',
-      //       ACTUAL_VALUE: '0',
-      //       UNIT_COST: '0',
-      //       DATAENTRY_TYPE_ID: 287,
-      //       DATAENTRY_TYPE: 'Blank',
-      //       DATAENTRY_UOM: 'HRS',
-      //       OCCURRENCE: 'Daily',
-      //       FREQUENCY_START_DATE: '0',
-      //       FREQUENCY_END_DATE: '30',
-      //       ITEM_NAME: 'Labour Expense - RC0001',
-      //       LINE_AMOUNT: 0.0,
-      //       PARAMETER_ID: 1826,
-      //       FORMULA_FLAG: '',
-      //       ITEM_ID: 15,
-      //       Parametr_input_type: '',
-      //       Parameter_input_format: '',
-      //       Parameter_input_value: '',
-      //     },
-      //   ],
-      //   livestock: [],
-      // };
-      console.log('Saving data:----------------->', updatedData);
+      console.log('Saving data:----------------->', updatedData, {
+        BATCH_ID: batch_id?.toString(),
+        BATCH_NO: formState.batch_No,
+      });
 
-      // Uncomment the following lines when ready to test the API call
       const response = await api.post(
         API_ENDPOINTS.SaveAndPostDataEntry,
         updatedData,
       );
       if (response.data?.status === 'success') {
+        getDataEntryDetails();
         console.log('Data saved successfully:', response.data);
+        setResponseMessage(response.data?.message || 'Operation successful.');
+        setVisible(true);
+        setModalType('success');
       } else {
         console.error('Failed to save data:', response.data);
+        setResponseMessage(response.data?.message || 'Something went wrong');
+        setVisible(true);
+        setModalType('error');
       }
-    } catch (error) {
-      console.error('API Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePost = async () => {
-    try {
-      setLoading(true);
-      const userDataString = await appStorage.getUserData();
-      const userData = userDataString;
-
-      if (!userData.companY_ID) {
-        console.error('Company ID is missing from user data');
-        return;
-      }
-
-      const updatedData = {
-        ...formState,
-        lineData,
-        batch_id,
-        company_id: userData.companY_ID,
-      };
-
-      console.log('Posting data:', updatedData);
-
-      // const response = await api.post(API_ENDPOINTS.PostDataEntry, updatedData);
-
-      // if (response.data?.status === 'success') {
-      //   console.log('Data posted successfully:', response.data);
-      // } else {
-      //   console.error('Failed to post data:', response.data);
-      // }
     } catch (error) {
       console.error('API Error:', error);
     } finally {
@@ -263,7 +299,6 @@ const EditDataEntry = ({route}) => {
 
   const getDataEntryDetails = async () => {
     try {
-      setLoading(true);
       const userDataString = await appStorage.getUserData();
       const commonDetails = await appStorage.getCommonDetails();
 
@@ -287,7 +322,12 @@ const EditDataEntry = ({route}) => {
         },
       });
 
-      console.log('response---------------', response.data, batch_id);
+      console.log(
+        'response---------------',
+        response.data,
+        batch_id,
+        response.data?.data?.line,
+      );
 
       if (response.data?.status === 'success') {
         const header = response.data?.data?.header?.[0];
@@ -300,7 +340,7 @@ const EditDataEntry = ({route}) => {
           remainingQty: header.remaininG_QTY?.toString() || '',
           breedName: header.breeD_NAME || '',
           templateName: header.templatE_NAME || '',
-          postingDate: header.p_DATE || '',
+          postingDate: formatDateForCalendar(header.p_DATE) || '',
           subLocationName: header.locatioN_NAME || '',
           ageDays: header.agE_DAYS?.toString() || '',
           ageWeek: header.agE_WEEK?.toString() || '',
@@ -308,22 +348,24 @@ const EditDataEntry = ({route}) => {
           startDate: header.s_DATE || '',
           runningCost: header.runninG_COST?.toString() || '',
           batch_No: header.batcH_NO || '',
-          nob_id: header.noB_ID || 0, // Set the new fields
+          nob_id: header.noB_ID || 0,
           lob_id: header.loB_ID || 0,
           template_id: header.templatE_ID || 0,
           location: header.locatioN_ID || 0,
           batch_id: header.batcH_ID?.toString(),
           CREATED_BY: header.createD_BY?.toString(),
+          Remark: header.remark || '',
+          DataEntryId: header.dataentrY_ID || 0,
+          postingStatus: header.status || '',
         }));
       } else {
-        setErrorMessage(response.data?.message || 'Something went wrong');
-        setErrorVisible(true);
+        setResponseMessage(response.data?.message || 'Something went wrong');
+        setModalType('error');
+        setVisible(true);
       }
     } catch (error) {
       console.error('API Error:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -347,23 +389,74 @@ const EditDataEntry = ({route}) => {
       />
       <CustomInput
         label="Total Units"
-        value={item.actuaL_VALUE?.toString()} // Ensure the value is a string
+        value={item.actuaL_VALUE?.toString()}
         onChangeText={text => updateLineData(index, 'actuaL_VALUE', text)}
       />
       <CustomInput
         label="Cost Per Unit"
-        value={item.uniT_COST?.toString()} // Ensure the value is a string
+        value={item.uniT_COST?.toString()}
         onChangeText={text => updateLineData(index, 'uniT_COST', text)}
         editable={item.parameteR_NAME === 'Descriptive' ? false : true}
       />
+      {item.parameteR_TYPE == 'Descriptive' ? (
+        item.parameter_input_type == 'input' ? (
+          <CustomInput
+            label="Descriptive"
+            value={item.parameter_input_value}
+            onChangeText={text =>
+              updateLineData(index, 'parameter_input_value', text)
+            }
+            placeholder="Enter descriptive value"
+          />
+        ) : item.parameteR_TYPE == 'Descriptive' ? (
+          <CustomDropdown
+            label="Descriptive"
+            selectedValue={item.parameter_input_value}
+            onValueChange={value => {
+              updateLineData(index, 'parameter_input_value', value);
+            }}
+            options={[
+              {id: '', name: 'Select'},
+              ...item.parameter_input_format
+                .split(',')
+                .map(opt => ({id: opt.trim(), name: opt.trim()})),
+            ]}
+          />
+        ) : null
+      ) : null}
     </View>
   );
+
+  const getCalendarConstraints = () => {
+    const today = new Date();
+    const todayFormatted = `${today.getFullYear()}-${String(
+      today.getMonth() + 1,
+    ).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    console.log('asjfksafgjaagjfgaghj', formState.postingDate, todayFormatted);
+
+    if (formState.postingStatus === 'draft') {
+      return {
+        minDate: formState.postingDate,
+        maxDate: formState.postingDate,
+      };
+    } else if ('posted' === 'posted') {
+      return {
+        minDate: formState.postingDate,
+        maxDate: todayFormatted,
+      };
+    } else return {};
+  };
 
   return (
     <>
       <HeaderWithBtn title="Data Entry" />
       <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
-        <View style={styles.headerContainer}>
+        <TouchableOpacity
+          onPress={() =>
+            updateFormState('isHeaderVisible', !formState.isHeaderVisible)
+          }
+          style={styles.headerContainer}>
           <Text style={styles.headerText}>HEADER ({formState.batch_No})</Text>
           <TouchableOpacity
             style={styles.toggleButton}
@@ -376,7 +469,7 @@ const EditDataEntry = ({route}) => {
               color="#fff"
             />
           </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
 
         {formState.isHeaderVisible && (
           <View style={styles.headerDetails}>
@@ -415,12 +508,29 @@ const EditDataEntry = ({route}) => {
               editable={false}
               style={styles.disabledInput}
             />
-            <CustomInput
-              label="Posting Date"
-              value={formState.postingDate}
-              onChangeText={text => updateFormState('postingDate', text)}
-              editable={false}
-              style={styles.disabledInput}
+            {/* <TouchableOpacity
+              style={styles.inputWithIcon}
+              onPress={() => setCalendarVisible(true)}>
+              <TextInput
+                style={styles.input}
+                placeholder="Posting Date"
+                value={formState.postingDate}
+                editable={false}
+              />
+              <Icon
+                name="calendar"
+                size={20}
+                color="#000"
+                style={styles.icon}
+              />
+            </TouchableOpacity> */}
+            <CalendarComponent
+              postingStatus="sss"
+              postingDate={formState.postingDate}
+              onDateChange={day => {
+                updateFormState('postingDate', day);
+              }}
+              {...getCalendarConstraints()}
             />
             {formState.showAdditionalFields && (
               <>
@@ -472,6 +582,14 @@ const EditDataEntry = ({route}) => {
                 />
               </>
             )}
+            <CustomInput
+              label="Remark"
+              value={formState.Remark}
+              onChangeText={text => updateFormState('Remark', text)}
+              multiline
+              numberOfLines={4}
+              placeholder="Enter your remark here..."
+            />
             <View style={styles.sectionTitleHeader}>
               <Text style={styles.sectionTitle}></Text>
               <TouchableOpacity
@@ -501,19 +619,59 @@ const EditDataEntry = ({route}) => {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={handleSave}>
-            <Text style={styles.buttonText}>Save</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleSubmit('draft')}>
+            <Text style={styles.buttonText}>{loading ? 'Saving' : 'Save'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handlePost}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleSubmit('posted')}>
             <Text style={styles.buttonText}>Post</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-      <ErrorModal
-        visible={errorVisible}
-        onClose={() => setErrorVisible(false)}
-        message={errorMessage}
+      <StatusModal
+        visible={visible}
+        onClose={() => setVisible(false)}
+        message={responseMessage}
+        type={modalType}
       />
+      {/* <Modal
+        animationType="slide"
+        transparent={true}
+        visible={calendarVisible}
+        onRequestClose={() => {
+          setCalendarVisible(false);
+        }}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Calendar
+              theme={{
+                arrowColor: COLORS.SecondaryColor,
+              }}
+              initialDate={formState.postingDate}
+              onDayPress={day => {
+                updateFormState('postingDate', day.dateString);
+                setCalendarVisible(false);
+              }}
+              markedDates={{
+                [formState.postingDate]: {
+                  selected: true,
+                  disableTouchEvent: true,
+                  selectedColor: COLORS.SecondaryColor,
+                },
+              }}
+              {...getCalendarConstraints()}
+            />
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setCalendarVisible(false)}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal> */}
     </>
   );
 };
@@ -598,6 +756,45 @@ const styles = StyleSheet.create({
   },
   disabledInput: {
     backgroundColor: '#f0f0f0',
+  },
+  inputWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 5,
+    marginVertical: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+  },
+  icon: {
+    marginLeft: 10,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '70%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  closeButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: COLORS.SecondaryColor,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 

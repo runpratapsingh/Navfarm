@@ -13,7 +13,15 @@ import {COLORS} from '../theme/theme';
 
 const {width} = Dimensions.get('window');
 
-const ErrorModal = ({visible, onClose, message}) => {
+const StatusModal = ({visible, onClose, message, type = 'success'}) => {
+  const isSuccess = type === 'success';
+
+  const iconName = isSuccess ? 'check-circle' : 'exclamation-circle';
+  const iconColor = isSuccess ? '#52c41a' : '#ff4d4f';
+  const titleText = isSuccess ? 'Success!' : 'Oops! Something went wrong';
+  const buttonColor = isSuccess ? '#52c41a' : COLORS.SecondaryColor;
+  const buttonText = isSuccess ? 'Okay' : 'Dismiss';
+
   return (
     <>
       {visible && (
@@ -27,15 +35,20 @@ const ErrorModal = ({visible, onClose, message}) => {
         <View style={styles.overlay}>
           <View style={styles.modalContent}>
             <View style={styles.iconContainer}>
-              <Icon name="exclamation-circle" size={50} color="#ff4d4f" />
+              <Icon name={iconName} size={50} color={iconColor} />
             </View>
-            <Text style={styles.title}>Oops! Something went wrong</Text>
+            <Text style={[styles.title, {color: iconColor}]}>{titleText}</Text>
             <Text style={styles.message}>
-              {message || 'Unknown error occurred.'}
+              {message ||
+                (isSuccess
+                  ? 'Operation completed successfully.'
+                  : 'Unknown error occurred.')}
             </Text>
 
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeButtonText}>Dismiss</Text>
+            <TouchableOpacity
+              style={[styles.closeButton, {backgroundColor: buttonColor}]}
+              onPress={onClose}>
+              <Text style={styles.closeButtonText}>{buttonText}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -65,7 +78,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.SecondaryColor,
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -76,7 +88,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   closeButton: {
-    backgroundColor: COLORS.SecondaryColor,
     paddingVertical: 10,
     paddingHorizontal: 25,
     borderRadius: 30,
@@ -87,4 +98,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ErrorModal;
+export default StatusModal;

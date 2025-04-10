@@ -10,6 +10,8 @@ import CustomDropdown from '../../../../components/DataEntryHistoryCustumDropdow
 import DataEntryHistorySearchedEntry from './DataEntryHistorySearchedEntry';
 import api from '../../../../Apiconfig/ApiconfigWithInterceptor';
 import {API_ENDPOINTS} from '../../../../Apiconfig/Apiconfig';
+import {appStorage} from '../../../../utils/services/StorageHelper';
+import StatusModal from '../../../../components/CustumModal';
 
 const LinkedDropdowns = () => {
   const [nature, setNature] = useState('');
@@ -27,62 +29,81 @@ const LinkedDropdowns = () => {
   const [searchedData, setSearchedData] = useState(null);
   const [loadingSearchedData, setLoadingSearchedData] = useState(false);
 
+  const [errorVisible, setErrorVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   useEffect(() => {
     fetchNatureOfBusiness();
   }, []);
 
-  const fetchNatureOfBusiness = () => {
-    const data = [
-      {id: '1', name: 'Retail'},
-      {id: '2', name: 'Manufacturing'},
-      {id: '3', name: 'IT Services'},
-    ];
-    setNatureOptions(data);
-    setLoadingNature(false);
+  const fetchNatureOfBusiness = async () => {
+    const selectedData = await appStorage.getSelectedCategory();
+    if (selectedData) {
+      const data = [];
+      data.push({id: selectedData.value, name: selectedData.label});
+      setNatureOptions(data);
+      setLoadingNature(false);
+    }
   };
 
-  const fetchLineOfBusiness = natureId => {
-    setLoadingLine(true);
-    let data = [];
-    if (natureId === '1')
-      data = [
-        {id: '101', name: 'Grocery'},
-        {id: '102', name: 'Clothing'},
-      ];
-    if (natureId === '2')
-      data = [
-        {id: '201', name: 'Electronics'},
-        {id: '202', name: 'Furniture'},
-      ];
-    if (natureId === '3')
-      data = [
-        {id: '301', name: 'Software Development'},
-        {id: '302', name: 'Consulting'},
-      ];
-    setLineOptions(data);
-    setLoadingLine(false);
+  const fetchLineOfBusiness = async natureId => {
+    try {
+      setLoadingLine(true);
+      const userData = await appStorage.getUserData();
+      const response = await api.get(API_ENDPOINTS.LOB_Dropdown_Data, {
+        params: {
+          Nature_Id: natureId,
+          company_id: userData.companY_ID,
+        },
+      });
+      console.log('Line of Business:', response.data.data);
+      if (response.data.status === 'success') {
+        const lobData = response?.data?.data?.linE_OF_BUSNINESS;
+        const custumizeData =
+          lobData &&
+          lobData.map(item => ({
+            id: item.value,
+            name: item.text,
+          }));
+        console.log('custumizeData', custumizeData);
+
+        setLineOptions(custumizeData || []);
+      }
+    } catch (error) {
+      console.log('Error fetching line of business:', error);
+    } finally {
+      setLoadingLine(false);
+    }
   };
 
-  const fetchBatchNumbers = lineId => {
-    setLoadingBatch(true);
-    let data = [];
-    if (lineId === '101')
-      data = [
-        {id: '1001', name: 'Batch A'},
-        {id: '1002', name: 'Batch B'},
-      ];
-    if (lineId === '201')
-      data = [
-        {id: '2001', name: 'Batch X'},
-        {id: '2002', name: 'Batch Y'},
-      ];
-    if (lineId === '301')
-      data = [
-        {id: '3001', name: 'Batch Alpha'},
-        {id: '3002', name: 'Batch Beta'},
-      ];
-    setBatchOptions(data);
-    setLoadingBatch(false);
+  const fetchBatchNumbers = async lineId => {
+    try {
+      setLoadingBatch(true);
+      let data = [];
+      const userData = await appStorage.getUserData();
+      const response = await api.get(API_ENDPOINTS.BATCH_Dropdown_Data, {
+        params: {
+          Lob_Id: lineId,
+          company_id: userData.companY_ID,
+        },
+      });
+      console.log('Batch Numbers:', response.data.data);
+      if (response.data.status === 'success') {
+        const batchData = response?.data?.data;
+        const custumizeData =
+          batchData &&
+          batchData.map(item => ({
+            id: item.value,
+            name: item.text,
+          }));
+
+        setBatchOptions(custumizeData || []);
+      }
+    } catch (error) {
+      console.log('Error fetching batch numbers:', error);
+    } finally {
+      setLoadingBatch(false);
+    }
   };
 
   const fetchDataHistorySearchedDetails = async () => {
@@ -90,12 +111,17 @@ const LinkedDropdowns = () => {
     try {
       const response = await api.get(API_ENDPOINTS.DataEntrySearchedDetails, {
         params: {
-          batch_id: '2676',
+          batch_id: batch,
         },
       });
 
-      console.log('Data history searched details:', response.data.data);
-      setSearchedData(response.data.data);
+      if (response.data.status === 'success') {
+        console.log('Data history searched details:', response.data);
+        setSearchedData(response.data.data);
+      } else {
+        setErrorVisible(true);
+        setErrorMessage(response.data.message);
+      }
     } catch (error) {
       console.log('Error fetching data history searched details:', error);
     } finally {
@@ -103,9 +129,18 @@ const LinkedDropdowns = () => {
     }
   };
 
-  useEffect(() => {
-    fetchDataHistorySearchedDetails();
-  }, []);
+  const handleSearch = async () => {
+    try {
+      console.log('Nature:', nature, 'Line:', line, 'Batch:', batch);
+      fetchDataHistorySearchedDetails();
+    } catch (error) {
+      console.log('Error during search:', error);
+    }
+  };
+
+  // useEffect(() => {
+  //   fetchDataHistorySearchedDetails();
+  // }, []);
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
@@ -142,14 +177,28 @@ const LinkedDropdowns = () => {
         loading={loadingBatch}
       />
 
-      <TouchableOpacity style={styles.searchButton}>
-        <Text style={styles.searchText}>Search</Text>
+      <TouchableOpacity
+        disabled={batch === '' || loadingSearchedData}
+        onPress={handleSearch}
+        style={[
+          styles.searchButton,
+          {opacity: batch === '' || loadingSearchedData ? 0.5 : 1},
+        ]}>
+        <Text style={styles.searchText}>
+          {loadingSearchedData ? 'Loading' : 'Search'}
+        </Text>
       </TouchableOpacity>
       <View style={styles.SearchedItemContainer}>
         {loadingSearchedData === false && (
           <DataEntryHistorySearchedEntry data={searchedData} />
         )}
       </View>
+      <StatusModal
+        visible={errorVisible}
+        onClose={() => setErrorVisible(false)}
+        message={errorMessage}
+        type="error"
+      />
     </ScrollView>
   );
 };
