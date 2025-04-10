@@ -29,7 +29,7 @@ const StatusModal = ({visible, onClose, message, type = 'success'}) => {
       )}
       <Modal
         transparent
-        animationType="slide"
+        animationType="fade"
         visible={visible}
         onRequestClose={onClose}>
         <View style={styles.overlay}>

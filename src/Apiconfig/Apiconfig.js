@@ -17,6 +17,6 @@ export const API_ENDPOINTS = {
   SaveAndPostDataEntry: '/insert_dataentry',
   DataEntrySearchedDetails: '/get_dataentry_details_json',
   NOB_Dropdown_Data: '/get_nob',
-  LOB_Dropdown_Data: '/get_nob',
+  LOB_Dropdown_Data: '/get_lob',
   BATCH_Dropdown_Data: '/get_batches',
 };

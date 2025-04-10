@@ -56,7 +56,7 @@ const LinkedDropdowns = () => {
           company_id: userData.companY_ID,
         },
       });
-      console.log('Line of Business:', response.data.data);
+      console.log('Line of Business:-----', response.data);
       if (response.data.status === 'success') {
         const lobData = response?.data?.data?.linE_OF_BUSNINESS;
         const custumizeData =

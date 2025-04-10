@@ -1,4 +1,4 @@
-import React, {use, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -6,30 +6,65 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Modal,
+  BackHandler,
 } from 'react-native';
 import {DrawerItemList} from '@react-navigation/drawer';
+import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import {COLORS} from '../theme/theme';
 import {logout} from '../utils/UtilsFn/Logout';
 import {appStorage} from '../utils/services/StorageHelper';
+import ConfirmLogoutAndExitModal from './ExitAndLogoutModalComp';
 
 const CustomDrawerContent = props => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [buttonText, setButtonText] = useState('');
   const [userName, setUserName] = useState('');
+  const navigation = useNavigation();
 
   const handleLogout = async () => {
     try {
       await logout();
-      setModalVisible(false); // Hide modal after successful logout
+      setModalVisible(false);
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'Login'}], // Adjust to your login screen name
+      });
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('LsetTitleogout error:', error);
     }
   };
+
+  const handleExitApp = () => {
+    setModalVisible(false);
+    BackHandler.exitApp(); // Exit the app
+  };
+
+  const handleBackPress = () => {
+    const navState = navigation.getState();
+    const stackLength = navState?.routes.length || 0;
+
+    console.log('Stack Length:', stackLength); // Debugging log
+    console.log('Current Route:', navState?.routes[navState.index]?.name); // Debugging log
+
+    if (stackLength <= 1) {
+      console.log(`Back button pressed on the last screen`); // Debugging log
+
+      // Only one screen in the stack
+      setModalVisible(true); // Show modal before exiting
+      setTitle('Exit App');
+      setMessage('Are you sure you want to exit the app?');
+      setButtonText('Exit');
+      return true; // Prevent default back action
+    }
+    return false; // Allow default back navigation
+  };
+
   const getUserName = async () => {
     try {
       const userData = await appStorage.getUserData();
-
       if (userData !== null) {
         setUserName(userData.name);
       }
@@ -40,7 +75,14 @@ const CustomDrawerContent = props => {
 
   useEffect(() => {
     getUserName(); // Fetch user name when component mounts
-  }, []);
+
+    // Add back press listener for Android
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      handleBackPress,
+    );
+    return () => backHandler.remove(); // Cleanup listener
+  }, [navigation]);
 
   return (
     <View style={styles.container}>
@@ -60,49 +102,27 @@ const CustomDrawerContent = props => {
       </ScrollView>
       <TouchableOpacity
         style={styles.logoutButton}
-        onPress={() => setModalVisible(true)}>
+        onPress={() => {
+          setModalVisible(true); // Show modal on logout press
+          setTitle('Logout');
+          setMessage('Are you sure you want to logout?');
+          setButtonText('Logout');
+        }} // Show modal on logout press
+      >
         <View style={styles.logoutIconContainer}>
           <Icon name="sign-out-alt" size={25} color="#fff" />
           <Text style={styles.logoutText}>Logout</Text>
         </View>
       </TouchableOpacity>
 
-      <Modal
-        animationType="fade"
-        transparent={true}
+      <ConfirmLogoutAndExitModal
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Icon
-              name="exclamation-circle"
-              size={40}
-              color="#ff4c4c"
-              style={styles.modalIcon}
-            />
-            <Text style={styles.modalTitle}>Confirm Logout</Text>
-            <Text style={styles.modalText}>
-              Are you sure you want to logout?
-            </Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setModalVisible(false)}>
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={handleLogout}>
-                <Text style={[styles.modalButtonText, styles.confirmText]}>
-                  Logout
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        title={title}
+        message={message}
+        buttonText={buttonText}
+        onClose={() => setModalVisible(false)}
+        onConfirm={title === 'Logout' ? handleLogout : handleExitApp} // Exit app on confirm
+      />
     </View>
   );
 };
@@ -150,77 +170,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 10,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
-
-  modalContent: {
-    width: '90%',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 25,
-    alignItems: 'center',
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-  },
-
-  modalIcon: {
-    marginBottom: 10,
-  },
-
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 10,
-  },
-
-  modalText: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#555',
-    marginBottom: 25,
-  },
-
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-
-  modalButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginHorizontal: 5,
-    borderWidth: 1,
-  },
-
-  cancelButton: {
-    backgroundColor: '#f0f0f0',
-    borderColor: '#ccc',
-  },
-
-  confirmButton: {
-    backgroundColor: '#ff4c4c',
-    borderColor: '#ff4c4c',
-  },
-
-  modalButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  confirmText: {
-    color: '#fff',
   },
 });
 

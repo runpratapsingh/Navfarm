@@ -150,7 +150,11 @@ const DataEntryHistorySearchedEntry = ({data}) => {
   return (
     <View style={styles.container}>
       {data && (
-        <View style={styles.headerContainer}>
+        <TouchableOpacity
+          onPress={() =>
+            updateFormState('isHeaderVisible', !formState.isHeaderVisible)
+          }
+          style={styles.headerContainer}>
           <Text style={styles.headerText}>HEADER</Text>
           <TouchableOpacity
             style={styles.toggleButton}
@@ -163,7 +167,7 @@ const DataEntryHistorySearchedEntry = ({data}) => {
               color="#fff"
             />
           </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
       )}
 
       {formState.isHeaderVisible && (

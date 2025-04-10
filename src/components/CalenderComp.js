@@ -31,7 +31,7 @@ const CalendarComponent = ({
 
       {/* Calendar Modal */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={calendarVisible}
         onRequestClose={() => setCalendarVisible(false)}>
