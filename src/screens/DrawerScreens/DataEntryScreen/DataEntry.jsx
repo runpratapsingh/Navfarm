@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import {PanGestureHandler} from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import {useNavigation} from '@react-navigation/native';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
 import Header from '../../../components/HeaderComp';
 import {COLORS} from '../../../theme/theme';
 import {appStorage} from '../../../utils/services/StorageHelper';
@@ -18,6 +18,8 @@ import api from '../../../Apiconfig/ApiconfigWithInterceptor';
 import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
 import {navigate} from '../../../utils/services/NavigationService';
 import LinkedDropdowns from './DataHistory/DataEntryHistory';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import StatusModal from '../../../components/CustumModal';
 
 const mainTabs = ['Data Entry', 'Data Entry History'];
 
@@ -27,12 +29,23 @@ const DataEntryScreen = () => {
   const [expanded, setExpanded] = useState(null);
   const [loading, setLoading] = useState(false);
   const [batchData, setBatchData] = useState([]);
+  const isFocused = useIsFocused();
+  const [visible, setVisible] = useState(false);
+  const [responseMessage, setResponseMessage] = useState('');
+  const [modalType, setModalType] = useState('error');
 
   const getDashboardData = async () => {
     try {
       setLoading(true);
       const userDataString = await appStorage.getUserData();
       const commonDetails = await appStorage.getCommonDetails();
+      const selectedData = await appStorage.getSelectedCategory();
+      console.log('selectedData', selectedData);
+
+      if (!selectedData) {
+        console.error('No Selected data found in Found');
+        return;
+      }
 
       if (!userDataString) {
         console.error('No user data found in Found');
@@ -52,13 +65,20 @@ const DataEntryScreen = () => {
       const response = await api.get(API_ENDPOINTS.DataEntryList, {
         params: {
           Company_Id: userData.companY_ID,
-          nature_id: commonDetailsData.naturE_ID,
+          nature_id: selectedData.value,
           Location_Id: commonDetailsData.locatioN_ID,
         },
       });
 
-      console.log('response1111', response.data.data.summarry);
-      setBatchData(response.data.data.summarry);
+      console.log('response1111', response.data);
+      if (response.data.status == 'success') {
+        setBatchData(response.data.data.summarry);
+      } else {
+        setResponseMessage(response.data?.message || 'Something went wrong');
+        setVisible(true);
+        setModalType('error');
+        setBatchData([]);
+      }
     } catch (error) {
       console.error('API Error:', error);
       throw error;
@@ -68,8 +88,10 @@ const DataEntryScreen = () => {
   };
 
   useEffect(() => {
-    getDashboardData();
-  }, []);
+    if (isFocused) {
+      getDashboardData();
+    }
+  }, [isFocused]);
 
   const renderBatchItem = ({item}) => (
     <View>
@@ -129,45 +151,50 @@ const DataEntryScreen = () => {
   );
 
   return (
-    <Animated.View style={styles.container}>
-      {/* Status Bar */}
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor={COLORS.primaryColor}
-      />
+    <SafeAreaView style={{flex: 1, backgroundColor: '#2E313F'}}>
+      <Animated.View style={styles.container}>
+        {/* Status Bar */}
+        <StatusBar barStyle="light-content" backgroundColor="#2E313F" />
 
-      {/* Header Component */}
-      <Header
-        title="Data Entry Summary"
-        onFilterPress={() => navigation.openDrawer()}
+        {/* Header Component */}
+        <Header
+          title="Data Entry Summary"
+          onFilterPress={() => navigation.openDrawer()}
+        />
+        {/* Main Tabs */}
+        <View style={styles.tabsContainer}>
+          {mainTabs.map(tab => (
+            <TouchableOpacity
+              style={styles.tabContainer}
+              key={tab}
+              onPress={() => setActiveMainTab(tab)}>
+              <Text
+                style={[styles.tab, activeMainTab === tab && styles.activeTab]}>
+                {tab}
+              </Text>
+              {activeMainTab === tab && <View style={styles.activeTabBorder} />}
+            </TouchableOpacity>
+          ))}
+        </View>
+        <View style={{flex: 1}}>
+          {activeMainTab === 'Data Entry' && (
+            <FlatList
+              contentContainerStyle={styles.flatListContainer}
+              data={batchData}
+              renderItem={renderBatchItem}
+              keyExtractor={item => item.lob_id.toString()}
+            />
+          )}
+          {activeMainTab === 'Data Entry History' && <LinkedDropdowns />}
+        </View>
+      </Animated.View>
+      <StatusModal
+        visible={visible}
+        onClose={() => setVisible(false)}
+        message={responseMessage}
+        type={modalType}
       />
-      {/* Main Tabs */}
-      <View style={styles.tabsContainer}>
-        {mainTabs.map(tab => (
-          <TouchableOpacity
-            style={styles.tabContainer}
-            key={tab}
-            onPress={() => setActiveMainTab(tab)}>
-            <Text
-              style={[styles.tab, activeMainTab === tab && styles.activeTab]}>
-              {tab}
-            </Text>
-            {activeMainTab === tab && <View style={styles.activeTabBorder} />}
-          </TouchableOpacity>
-        ))}
-      </View>
-      <View style={{flex: 1}}>
-        {activeMainTab === 'Data Entry' && (
-          <FlatList
-            contentContainerStyle={styles.flatListContainer}
-            data={batchData}
-            renderItem={renderBatchItem}
-            keyExtractor={item => item.lob_id.toString()}
-          />
-        )}
-        {activeMainTab === 'Data Entry History' && <LinkedDropdowns />}
-      </View>
-    </Animated.View>
+    </SafeAreaView>
   );
 };
 

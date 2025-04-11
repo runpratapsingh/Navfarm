@@ -8,6 +8,7 @@ import {
   FlatList,
   Modal,
   TextInput,
+  StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {COLORS} from '../../../../theme/theme';
@@ -22,6 +23,7 @@ import CustomDropdown from '../../../../components/DataEntryHistoryCustumDropdow
 import StatusModal from '../../../../components/CustumModal';
 import {Calendar} from 'react-native-calendars';
 import CalendarComponent from '../../../../components/CalenderComp';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 const EditDataEntry = ({route}) => {
   const {batch_id} = route.params;
@@ -52,11 +54,14 @@ const EditDataEntry = ({route}) => {
     postingStatus: '',
   });
   const [lineData, setLineData] = useState([]);
+  const [groupedData, setGroupedData] = useState({});
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
   const [modalType, setModalType] = useState('error');
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({});
+  const [isFormVisible, setIsFormVisible] = useState(false);
 
   const formatDateForCalendar = dateStr => {
     const [day, month, year] = dateStr.split('-');
@@ -358,6 +363,24 @@ const EditDataEntry = ({route}) => {
           DataEntryId: header.dataentrY_ID || 0,
           postingStatus: header.status || '',
         }));
+
+        // Group the line data by parameteR_TYPE
+        const grouped = line.reduce((acc, item) => {
+          const type = item.parameteR_TYPE;
+          if (!acc[type]) {
+            acc[type] = [];
+          }
+          acc[type].push(item);
+          return acc;
+        }, {});
+
+        setGroupedData(grouped);
+        setExpandedGroups(
+          Object.keys(grouped).reduce((acc, key) => {
+            acc[key] = false;
+            return acc;
+          }, {}),
+        );
       } else {
         setResponseMessage(response.data?.message || 'Something went wrong');
         setModalType('error');
@@ -372,6 +395,13 @@ const EditDataEntry = ({route}) => {
   useEffect(() => {
     getDataEntryDetails();
   }, []);
+
+  const toggleGroup = group => {
+    setExpandedGroups(prevState => ({
+      ...prevState,
+      [group]: !prevState[group],
+    }));
+  };
 
   const renderLineItem = ({item, index}) => (
     <View style={styles.section} key={index}>
@@ -450,228 +480,205 @@ const EditDataEntry = ({route}) => {
 
   return (
     <>
-      <HeaderWithBtn title="Data Entry" />
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
-        <TouchableOpacity
-          onPress={() =>
-            updateFormState('isHeaderVisible', !formState.isHeaderVisible)
-          }
-          style={styles.headerContainer}>
-          <Text style={styles.headerText}>HEADER ({formState.batch_No})</Text>
+      <SafeAreaView style={{flex: 1, backgroundColor: '#2E313F'}}>
+        <StatusBar barStyle="light-content" backgroundColor="#2E313F" />
+        <HeaderWithBtn title="Data Entry" />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={styles.container}>
           <TouchableOpacity
-            style={styles.toggleButton}
             onPress={() =>
               updateFormState('isHeaderVisible', !formState.isHeaderVisible)
-            }>
-            <Icon
-              name={formState.isHeaderVisible ? 'minus' : 'plus'}
-              size={16}
-              color="#fff"
-            />
-          </TouchableOpacity>
-        </TouchableOpacity>
-
-        {formState.isHeaderVisible && (
-          <View style={styles.headerDetails}>
-            <CustomInput
-              label="Nature Of Business"
-              value={formState.natureOfBusiness}
-              onChangeText={text => updateFormState('natureOfBusiness', text)}
-              editable={false}
-              style={styles.disabledInput}
-            />
-            <CustomInput
-              label="Line Of Business"
-              value={formState.lineOfBusiness}
-              onChangeText={text => updateFormState('lineOfBusiness', text)}
-              editable={false}
-              style={styles.disabledInput}
-            />
-            <CustomInput
-              label="Remaining Qty"
-              value={formState.remainingQty}
-              onChangeText={text => updateFormState('remainingQty', text)}
-              editable={false}
-              style={styles.disabledInput}
-            />
-            <CustomInput
-              label="Breed Name"
-              value={formState.breedName}
-              onChangeText={text => updateFormState('breedName', text)}
-              editable={false}
-              style={styles.disabledInput}
-            />
-            <CustomInput
-              label="Template Name"
-              value={formState.templateName}
-              onChangeText={text => updateFormState('templateName', text)}
-              editable={false}
-              style={styles.disabledInput}
-            />
-            {/* <TouchableOpacity
-              style={styles.inputWithIcon}
-              onPress={() => setCalendarVisible(true)}>
-              <TextInput
-                style={styles.input}
-                placeholder="Posting Date"
-                value={formState.postingDate}
-                editable={false}
-              />
-              <Icon
-                name="calendar"
-                size={20}
-                color="#000"
-                style={styles.icon}
-              />
-            </TouchableOpacity> */}
-            <CalendarComponent
-              postingStatus="sss"
-              postingDate={formState.postingDate}
-              onDateChange={day => {
-                updateFormState('postingDate', day);
-              }}
-              {...getCalendarConstraints()}
-            />
-            {formState.showAdditionalFields && (
-              <>
-                <CustomInput
-                  label="Sub Location Name"
-                  value={formState.subLocationName}
-                  onChangeText={text =>
-                    updateFormState('subLocationName', text)
-                  }
-                  editable={false}
-                  style={styles.disabledInput}
-                />
-                <CustomInput
-                  label="Age (Days)"
-                  value={formState.ageDays}
-                  onChangeText={text => updateFormState('ageDays', text)}
-                  editable={false}
-                  style={styles.disabledInput}
-                />
-                <CustomInput
-                  label="Age (Week)"
-                  value={formState.ageWeek}
-                  onChangeText={text => updateFormState('ageWeek', text)}
-                  editable={false}
-                  style={styles.disabledInput}
-                />
-                <CustomInput
-                  label="Opening Quantity"
-                  value={formState.openingQuantity}
-                  onChangeText={text =>
-                    updateFormState('openingQuantity', text)
-                  }
-                  editable={false}
-                  style={styles.disabledInput}
-                />
-                <CustomInput
-                  label="Start Date"
-                  value={formState.startDate}
-                  onChangeText={text => updateFormState('startDate', text)}
-                  editable={false}
-                  style={styles.disabledInput}
-                />
-                <CustomInput
-                  label="Running Cost"
-                  value={formState.runningCost}
-                  onChangeText={text => updateFormState('runningCost', text)}
-                  editable={false}
-                  style={styles.disabledInput}
-                />
-              </>
-            )}
-            <CustomInput
-              label="Remark"
-              value={formState.Remark}
-              onChangeText={text => updateFormState('Remark', text)}
-              multiline
-              numberOfLines={4}
-              placeholder="Enter your remark here..."
-            />
-            <View style={styles.sectionTitleHeader}>
-              <Text style={styles.sectionTitle}></Text>
-              <TouchableOpacity
-                onPress={() =>
-                  updateFormState(
-                    'showAdditionalFields',
-                    !formState.showAdditionalFields,
-                  )
-                }>
-                <Icon
-                  name={formState.showAdditionalFields ? 'eye-slash' : 'eye'}
-                  size={20}
-                  color="#000"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        <DataEntryAddLine />
-        <View style={styles.lineDetail}>
-          <FlatList
-            data={lineData}
-            renderItem={renderLineItem}
-            keyExtractor={(item, index) => index.toString()}
-          />
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => handleSubmit('draft')}>
-            <Text style={styles.buttonText}>{loading ? 'Saving' : 'Save'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => handleSubmit('posted')}>
-            <Text style={styles.buttonText}>Post</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-      <StatusModal
-        visible={visible}
-        onClose={() => setVisible(false)}
-        message={responseMessage}
-        type={modalType}
-      />
-      {/* <Modal
-        animationType="slide"
-        transparent={true}
-        visible={calendarVisible}
-        onRequestClose={() => {
-          setCalendarVisible(false);
-        }}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Calendar
-              theme={{
-                arrowColor: COLORS.SecondaryColor,
-              }}
-              initialDate={formState.postingDate}
-              onDayPress={day => {
-                updateFormState('postingDate', day.dateString);
-                setCalendarVisible(false);
-              }}
-              markedDates={{
-                [formState.postingDate]: {
-                  selected: true,
-                  disableTouchEvent: true,
-                  selectedColor: COLORS.SecondaryColor,
-                },
-              }}
-              {...getCalendarConstraints()}
-            />
+            }
+            style={styles.headerContainer}>
+            <Text style={styles.headerText}>HEADER ({formState.batch_No})</Text>
             <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setCalendarVisible(false)}>
-              <Text style={styles.closeButtonText}>Close</Text>
+              style={styles.toggleButton}
+              onPress={() =>
+                updateFormState('isHeaderVisible', !formState.isHeaderVisible)
+              }>
+              <Icon
+                name={formState.isHeaderVisible ? 'minus' : 'plus'}
+                size={16}
+                color="#fff"
+              />
+            </TouchableOpacity>
+          </TouchableOpacity>
+
+          {formState.isHeaderVisible && (
+            <View style={styles.headerDetails}>
+              <CustomInput
+                label="Nature Of Business"
+                value={formState.natureOfBusiness}
+                onChangeText={text => updateFormState('natureOfBusiness', text)}
+                editable={false}
+                style={styles.disabledInput}
+              />
+              <CustomInput
+                label="Line Of Business"
+                value={formState.lineOfBusiness}
+                onChangeText={text => updateFormState('lineOfBusiness', text)}
+                editable={false}
+                style={styles.disabledInput}
+              />
+              <CustomInput
+                label="Remaining Qty"
+                value={formState.remainingQty}
+                onChangeText={text => updateFormState('remainingQty', text)}
+                editable={false}
+                style={styles.disabledInput}
+              />
+              <CustomInput
+                label="Breed Name"
+                value={formState.breedName}
+                onChangeText={text => updateFormState('breedName', text)}
+                editable={false}
+                style={styles.disabledInput}
+              />
+              <CustomInput
+                label="Template Name"
+                value={formState.templateName}
+                onChangeText={text => updateFormState('templateName', text)}
+                editable={false}
+                style={styles.disabledInput}
+              />
+              <CalendarComponent
+                postingStatus="sss"
+                postingDate={formState.postingDate}
+                onDateChange={day => {
+                  updateFormState('postingDate', day);
+                }}
+                {...getCalendarConstraints()}
+              />
+              {formState.showAdditionalFields && (
+                <>
+                  <CustomInput
+                    label="Sub Location Name"
+                    value={formState.subLocationName}
+                    onChangeText={text =>
+                      updateFormState('subLocationName', text)
+                    }
+                    editable={false}
+                    style={styles.disabledInput}
+                  />
+                  <CustomInput
+                    label="Age (Days)"
+                    value={formState.ageDays}
+                    onChangeText={text => updateFormState('ageDays', text)}
+                    editable={false}
+                    style={styles.disabledInput}
+                  />
+                  <CustomInput
+                    label="Age (Week)"
+                    value={formState.ageWeek}
+                    onChangeText={text => updateFormState('ageWeek', text)}
+                    editable={false}
+                    style={styles.disabledInput}
+                  />
+                  <CustomInput
+                    label="Opening Quantity"
+                    value={formState.openingQuantity}
+                    onChangeText={text =>
+                      updateFormState('openingQuantity', text)
+                    }
+                    editable={false}
+                    style={styles.disabledInput}
+                  />
+                  <CustomInput
+                    label="Start Date"
+                    value={formState.startDate}
+                    onChangeText={text => updateFormState('startDate', text)}
+                    editable={false}
+                    style={styles.disabledInput}
+                  />
+                  <CustomInput
+                    label="Running Cost"
+                    value={formState.runningCost}
+                    onChangeText={text => updateFormState('runningCost', text)}
+                    editable={false}
+                    style={styles.disabledInput}
+                  />
+                </>
+              )}
+              <CustomInput
+                label="Remark"
+                value={formState.Remark}
+                onChangeText={text => updateFormState('Remark', text)}
+                multiline
+                numberOfLines={4}
+                placeholder="Enter your remark here..."
+              />
+              <View style={styles.sectionTitleHeader}>
+                <Text style={styles.sectionTitle}></Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    updateFormState(
+                      'showAdditionalFields',
+                      !formState.showAdditionalFields,
+                    )
+                  }>
+                  <Icon
+                    name={formState.showAdditionalFields ? 'eye-slash' : 'eye'}
+                    size={20}
+                    color="#000"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          <DataEntryAddLine
+            isFormVisible={isFormVisible}
+            setIsFormVisible={setIsFormVisible}
+          />
+          {isFormVisible && (
+            <View style={styles.lineDetail}>
+              {Object.keys(groupedData).map(group => (
+                <View key={group} style={styles.section1}>
+                  <TouchableOpacity
+                    onPress={() => toggleGroup(group)}
+                    style={styles.sectionTitleHeader}>
+                    <Text style={styles.sectionTitle1}>{group}</Text>
+                    <Icon
+                      name={expandedGroups[group] ? 'minus' : 'plus'}
+                      size={20}
+                      color={COLORS.primaryColor}
+                    />
+                  </TouchableOpacity>
+                  {expandedGroups[group] && (
+                    <FlatList
+                      data={groupedData[group]}
+                      renderItem={renderLineItem}
+                      keyExtractor={(item, index) => index.toString()}
+                    />
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => handleSubmit('draft')}>
+              <Text style={styles.buttonText}>
+                {loading ? 'Saving' : 'Save'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => handleSubmit('posted')}>
+              <Text style={styles.buttonText}>Post</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal> */}
+        </ScrollView>
+        <StatusModal
+          visible={visible}
+          onClose={() => setVisible(false)}
+          message={responseMessage}
+          type={modalType}
+        />
+      </SafeAreaView>
     </>
   );
 };
@@ -725,10 +732,20 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
   },
+  section1: {
+    marginBottom: 20,
+    borderBottomColor: '#ddd',
+    borderBottomWidth: 1,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.SecondaryColor,
+  },
+  sectionTitle1: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.primaryColor,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -736,6 +753,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginHorizontal: 16,
     paddingBottom: 20,
+    marginTop: 20,
   },
   button: {
     backgroundColor: COLORS.SecondaryColor,

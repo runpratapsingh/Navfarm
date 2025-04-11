@@ -10,7 +10,7 @@ const SplashScreen = ({navigation}) => {
     try {
       const userData = await appStorage.getUserData();
       if (userData) {
-        navigation.replace('Drawer'); // Navigate to Home if logged in
+        navigation.replace('CategorySelection'); // Navigate to Home if logged in
       } else {
         navigation.replace('login'); // Navigate to Sign-in if not logged in
       }

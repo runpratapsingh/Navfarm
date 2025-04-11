@@ -4,6 +4,8 @@ import CustomDrawerContent from '../components/CustomDrawerContent';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import DataEntryScreen from '../screens/DrawerScreens/DataEntryScreen/DataEntry';
 import BatchCreation from '../screens/DrawerScreens/BatchCreationScreen/BatchCreate';
+import HomeScreen from '../screens/DrawerScreens/Home/HomeScreen';
+import Dashboard from '../screens/DrawerScreens/DashBoard/Dashboard';
 
 const Drawer = createDrawerNavigator();
 
@@ -20,6 +22,42 @@ function DrawerNavigation() {
       }}
       initialRouteName="DataEntry"
       drawerContent={props => <CustomDrawerContent {...props} />}>
+      <Drawer.Screen
+        name="Dashboard"
+        options={{
+          drawerItemStyle: {
+            backgroundColor: '#e0e0e0',
+            borderRadius: 5,
+            marginVertical: 5,
+            marginRight: 0,
+          },
+          drawerLabelStyle: {color: '#007aff', fontSize: 16},
+          drawerLabel: 'Dashboard',
+          drawerIcon: ({color, size}) => (
+            <Icon name="tachometer-alt" color="#000000" size={20} />
+          ),
+          headerShown: false,
+        }}
+        component={Dashboard}
+      />
+      <Drawer.Screen
+        name="Home"
+        options={{
+          drawerItemStyle: {
+            backgroundColor: '#e0e0e0',
+            borderRadius: 5,
+            marginVertical: 5,
+            marginRight: 0,
+          },
+          drawerLabelStyle: {color: '#007aff', fontSize: 16},
+          drawerLabel: 'Home',
+          drawerIcon: ({color, size}) => (
+            <Icon name="home" color="#000000" size={20} />
+          ),
+          headerShown: false,
+        }}
+        component={HomeScreen}
+      />
       <Drawer.Screen
         name="DataEntry"
         options={{

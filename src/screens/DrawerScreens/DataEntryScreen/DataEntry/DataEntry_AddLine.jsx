@@ -47,8 +47,7 @@ const uoms = [
   {label: 'KG', value: 'KG'},
 ];
 
-export default function DataEntryAddLine() {
-  const [isFormVisible, setIsFormVisible] = useState(false);
+export default function DataEntryAddLine({isFormVisible, setIsFormVisible}) {
   const [selectedParameterType, setSelectedParameterType] = useState(null);
   const [selectedParameterName, setSelectedParameterName] = useState(null);
   const [totalUnits, setTotalUnits] = useState('');
@@ -115,7 +114,9 @@ export default function DataEntryAddLine() {
         barStyle="light-content"
         backgroundColor={COLORS.primaryColor}
       />
-      <View style={styles.headerContainer}>
+      <TouchableOpacity
+        style={styles.headerContainer}
+        onPress={() => setIsFormVisible(!isFormVisible)}>
         <Text style={styles.header}>Line</Text>
         <TouchableOpacity
           style={styles.toggleButton}
@@ -126,7 +127,7 @@ export default function DataEntryAddLine() {
             color="#fff"
           />
         </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
       {/* {isFormVisible && (
         <View style={{padding: 16}}>
           <Dropdown

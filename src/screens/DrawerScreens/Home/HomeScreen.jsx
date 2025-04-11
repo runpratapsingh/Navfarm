@@ -7,22 +7,19 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
-  BackHandler,
 } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import {requireImage} from '../../utils/JSON/Images';
-import api from '../../Apiconfig/ApiconfigWithInterceptor';
-
-import {API_ENDPOINTS} from '../../Apiconfig/Apiconfig';
-import {navigate} from '../../utils/services/NavigationService';
-import {appStorage} from '../../utils/services/StorageHelper';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
-import ConfirmLogoutAndExitModal from '../../components/ExitAndLogoutModalComp';
-import {useNavigation} from '@react-navigation/native';
+import {requireImage} from '../../../utils/JSON/Images';
+import api from '../../../Apiconfig/ApiconfigWithInterceptor';
+import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
+import {navigate} from '../../../utils/services/NavigationService';
+import {appStorage} from '../../../utils/services/StorageHelper';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
 
 const initialData = [
   {key: 'poultry', label: 'Poultry', image: requireImage.poultry},
@@ -34,7 +31,7 @@ const initialData = [
 const Card = ({image, label, item}) => {
   const scale = useSharedValue(1);
   const borderRadius = useSharedValue(20);
-
+  const navigation = useNavigation();
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{scale: withSpring(scale.value)}],
@@ -48,7 +45,7 @@ const Card = ({image, label, item}) => {
       borderRadius.value = 10;
       console.log('Card clicked:', item);
       await appStorage.setSelectedCategory(item);
-      navigate('Drawer', {});
+      navigation.navigate('DataEntry');
     } catch (error) {
       console.log('Error in OnpressOutClick:', error);
     }
@@ -71,48 +68,10 @@ const Card = ({image, label, item}) => {
   );
 };
 
-const CategorySelection = () => {
+const HomeScreen = () => {
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
-  const [buttonText, setButtonText] = useState('');
-  const navigation = useNavigation();
 
-  const handleExitApp = () => {
-    setModalVisible(false);
-    BackHandler.exitApp(); // Exit the app
-  };
-
-  const handleBackPress = () => {
-    const navState = navigation.getState();
-    const stackLength = navState?.routes.length || 0;
-
-    console.log('Stack Length:', stackLength); // Debugging log
-    console.log('Current Route:', navState?.routes[navState.index]?.name); // Debugging log
-
-    if (stackLength <= 1) {
-      console.log(`Back button pressed on the last screen`); // Debugging log
-
-      // Only one screen in the stack
-      setModalVisible(true); // Show modal before exiting
-      setTitle('Exit App');
-      setMessage('Are you sure you want to exit the app?');
-      setButtonText('Exit');
-      setLoading(prev => !prev); // Toggle loading state
-      return true; // Prevent default back action
-    }
-    return false; // Allow default back navigation
-  };
-
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      handleBackPress,
-    );
-    return () => backHandler.remove(); // Cleanup listener
-  }, [navigation]);
   const getDashboardData = async () => {
     try {
       setLoading(true);
@@ -175,18 +134,15 @@ const CategorySelection = () => {
   useEffect(() => {
     getDashboardData();
   }, []);
-  useEffect(() => {
-    console.log('Modal Visible State:', modalVisible); // Debugging log
-  }, [modalVisible]);
 
   const renderItem = ({item}) => (
     <Card image={item.image} label={item.label} item={item} />
   );
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
+    <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
       <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
         {!loading && (
           <FlatList
             data={data}
@@ -195,18 +151,6 @@ const CategorySelection = () => {
           />
         )}
       </View>
-      <ConfirmLogoutAndExitModal
-        visible={modalVisible}
-        title={title}
-        message={message}
-        buttonText={buttonText}
-        onClose={() => {
-          setModalVisible(false);
-          setLoading(false); // Reset loading state when modal is closed
-          console.log('Modal closed', loading); // Debugging log
-        }}
-        onConfirm={handleExitApp} // Exit app on confirm
-      />
     </SafeAreaView>
   );
 };
@@ -245,4 +189,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CategorySelection;
+export default HomeScreen;

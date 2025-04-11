@@ -5,16 +5,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   ScrollView,
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
   StatusBar,
-  Alert,
   Image,
-  ActivityIndicator, // Import ActivityIndicator for loading spinner
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import {COLORS} from '../../theme/theme';
@@ -27,6 +24,7 @@ import axios from 'axios';
 import api from '../../Apiconfig/ApiconfigWithInterceptor';
 import {appStorage} from '../../utils/services/StorageHelper';
 import ErrorModal from '../../components/CustumModal';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 const SignInScreen = () => {
   const [password, setPassword] = useState('');

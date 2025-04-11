@@ -5,7 +5,6 @@ import SignInScreen from '../screens/auth/LoginScreen';
 import SplashScreen from '../screens/Splace/SplaceScreen';
 import OtpVerification from '../screens/auth/OtpVerification';
 import CategorySelection from '../screens/CategorySelectionScreen/CategorySelection';
-import PaymentScreen from '../screens/auth/PaymentScreen';
 import EditDataEntry from '../screens/DrawerScreens/DataEntryScreen/DataEntry/EditDataEntry';
 import DataEntryScreen from '../screens/DrawerScreens/DataEntryScreen/DataEntry';
 import LineDetailScreen from '../screens/DrawerScreens/DataEntryScreen/DataEntry/LineDetails';
@@ -22,11 +21,7 @@ function MyStack() {
         name="splace"
         component={SplashScreen}
       />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="payment"
-        component={PaymentScreen}
-      />
+
       <Stack.Screen
         options={{headerShown: false}}
         name="login"

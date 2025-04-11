@@ -10,12 +10,15 @@ import {StyleSheet, Text} from 'react-native';
 import MyStack from './src/navigation/stackNavigator';
 import {NavigationContainer} from '@react-navigation/native';
 import {navigationRef} from './src/utils/services/NavigationService';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 
 function App(): React.JSX.Element {
   return (
-    <NavigationContainer ref={navigationRef}>
-      <MyStack />
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer ref={navigationRef}>
+        <MyStack />
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
 
