@@ -23,6 +23,7 @@ import {appStorage} from '../../utils/services/StorageHelper';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import ConfirmLogoutAndExitModal from '../../components/ExitAndLogoutModalComp';
 import {useNavigation} from '@react-navigation/native';
+import Header from '../../components/HeaderComp';
 
 const initialData = [
   {key: 'poultry', label: 'Poultry', image: requireImage.poultry},

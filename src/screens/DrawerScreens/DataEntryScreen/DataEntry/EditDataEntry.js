@@ -405,55 +405,79 @@ const EditDataEntry = ({route}) => {
 
   const renderLineItem = ({item, index}) => (
     <View style={styles.section} key={index}>
-      <View style={styles.sectionTitleHeader}>
-        <Text style={styles.sectionTitle}>{item.parameteR_NAME || ''}</Text>
+      <View style={styles.row}>
+        {/* <CustomInput
+          label="Parameter Name"
+          value={item.parameteR_NAME}
+          onChangeText={text => updateLineData(index, 'actuaL_VALUE', text)}
+          containerStyle={styles.inputWrapper}
+          editable={false}
+          style={styles.disabledInput}
+        /> */}
+        <View style={styles.textParameterNameContainer}>
+          <Text style={styles.sectionTitle}>{item.parameteR_NAME || ''}</Text>
+        </View>
+        <CustomInput
+          label="Total Units"
+          value={item.actuaL_VALUE?.toString()}
+          onChangeText={text => updateLineData(index, 'actuaL_VALUE', text)}
+          containerStyle={styles.inputWrapper1}
+        />
+        <CustomInput
+          label="Cost Per Unit"
+          value={item.uniT_COST?.toString()}
+          onChangeText={text => updateLineData(index, 'uniT_COST', text)}
+          editable={item.parameteR_NAME === 'Descriptive' ? false : true}
+          containerStyle={styles.inputWrapper1}
+        />
+        <View style={styles.sectionTitleHeader1}>
+          <TouchableOpacity onPress={() => handleEyePress(item)}>
+            <Icon name="eye" size={20} color="#000" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={styles.row}>
+        {item.parameteR_TYPE == 'Descriptive' ? (
+          item.parameter_input_type == 'input' ? (
+            <CustomInput
+              label="Descriptive"
+              value={item.parameter_input_value}
+              onChangeText={text =>
+                updateLineData(index, 'parameter_input_value', text)
+              }
+              placeholder="Enter descriptive value"
+              containerStyle={{width: '100%'}}
+            />
+          ) : item.parameteR_TYPE == 'Descriptive' ? (
+            <CustomDropdown
+              label="Descriptive"
+              selectedValue={item.parameter_input_value}
+              onValueChange={value => {
+                updateLineData(index, 'parameter_input_value', value);
+              }}
+              options={[
+                {id: '', name: 'Select'},
+                ...item.parameter_input_format
+                  .split(',')
+                  .map(opt => ({id: opt.trim(), name: opt.trim()})),
+              ]}
+              containerStyle={styles.inputWrapper}
+            />
+          ) : null
+        ) : null}
+        {/* <CustomInput
+          label="Item Name"
+          value={item.iteM_NAME}
+          onChangeText={text => updateLineData(index, 'iteM_NAME', text)}
+          editable={false}
+          containerStyle={styles.inputWrapper}
+        /> */}
+      </View>
+      {/* <View style={styles.sectionTitleHeader}>
         <TouchableOpacity onPress={() => handleEyePress(item)}>
           <Icon name="eye" size={20} color="#000" />
         </TouchableOpacity>
-      </View>
-      <CustomInput
-        label="Item Name"
-        value={item.iteM_NAME}
-        onChangeText={text => updateLineData(index, 'iteM_NAME', text)}
-        editable={false}
-      />
-      <CustomInput
-        label="Total Units"
-        value={item.actuaL_VALUE?.toString()}
-        onChangeText={text => updateLineData(index, 'actuaL_VALUE', text)}
-      />
-      <CustomInput
-        label="Cost Per Unit"
-        value={item.uniT_COST?.toString()}
-        onChangeText={text => updateLineData(index, 'uniT_COST', text)}
-        editable={item.parameteR_NAME === 'Descriptive' ? false : true}
-      />
-      {item.parameteR_TYPE == 'Descriptive' ? (
-        item.parameter_input_type == 'input' ? (
-          <CustomInput
-            label="Descriptive"
-            value={item.parameter_input_value}
-            onChangeText={text =>
-              updateLineData(index, 'parameter_input_value', text)
-            }
-            placeholder="Enter descriptive value"
-          />
-        ) : item.parameteR_TYPE == 'Descriptive' ? (
-          <CustomDropdown
-            label="Descriptive"
-            selectedValue={item.parameter_input_value}
-            onValueChange={value => {
-              updateLineData(index, 'parameter_input_value', value);
-            }}
-            options={[
-              {id: '', name: 'Select'},
-              ...item.parameter_input_format
-                .split(',')
-                .map(opt => ({id: opt.trim(), name: opt.trim()})),
-            ]}
-          />
-        ) : null
-      ) : null}
+      </View> */}
     </View>
   );
 
@@ -507,41 +531,116 @@ const EditDataEntry = ({route}) => {
 
           {formState.isHeaderVisible && (
             <View style={styles.headerDetails}>
-              <CustomInput
-                label="Nature Of Business"
-                value={formState.natureOfBusiness}
-                onChangeText={text => updateFormState('natureOfBusiness', text)}
-                editable={false}
-                style={styles.disabledInput}
-              />
-              <CustomInput
-                label="Line Of Business"
-                value={formState.lineOfBusiness}
-                onChangeText={text => updateFormState('lineOfBusiness', text)}
-                editable={false}
-                style={styles.disabledInput}
-              />
-              <CustomInput
-                label="Remaining Qty"
-                value={formState.remainingQty}
-                onChangeText={text => updateFormState('remainingQty', text)}
-                editable={false}
-                style={styles.disabledInput}
-              />
-              <CustomInput
-                label="Breed Name"
-                value={formState.breedName}
-                onChangeText={text => updateFormState('breedName', text)}
-                editable={false}
-                style={styles.disabledInput}
-              />
-              <CustomInput
-                label="Template Name"
-                value={formState.templateName}
-                onChangeText={text => updateFormState('templateName', text)}
-                editable={false}
-                style={styles.disabledInput}
-              />
+              <View style={styles.row}>
+                <CustomInput
+                  label="Nature Of Business"
+                  value={formState.natureOfBusiness}
+                  onChangeText={text =>
+                    updateFormState('natureOfBusiness', text)
+                  }
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+                <CustomInput
+                  label="Line Of Business"
+                  value={formState.lineOfBusiness}
+                  onChangeText={text => updateFormState('lineOfBusiness', text)}
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+              </View>
+              <View style={styles.row}>
+                <CustomInput
+                  label="Remaining Qty"
+                  value={formState.remainingQty}
+                  onChangeText={text => updateFormState('remainingQty', text)}
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+                <CustomInput
+                  label="Breed Name"
+                  value={formState.breedName}
+                  onChangeText={text => updateFormState('breedName', text)}
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+              </View>
+              <View style={styles.row}>
+                <CustomInput
+                  label="Template Name"
+                  value={formState.templateName}
+                  onChangeText={text => updateFormState('templateName', text)}
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+                <CustomInput
+                  label="Running Cost"
+                  value={formState.runningCost}
+                  onChangeText={text => updateFormState('runningCost', text)}
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+              </View>
+              {formState.showAdditionalFields && (
+                <>
+                  <View style={styles.row}>
+                    <CustomInput
+                      label="Sub Location Name"
+                      value={formState.subLocationName}
+                      onChangeText={text =>
+                        updateFormState('subLocationName', text)
+                      }
+                      editable={false}
+                      style={styles.disabledInput}
+                      containerStyle={styles.inputWrapper}
+                    />
+                    <CustomInput
+                      label="Age (Days)"
+                      value={formState.ageDays}
+                      onChangeText={text => updateFormState('ageDays', text)}
+                      editable={false}
+                      style={styles.disabledInput}
+                      containerStyle={styles.inputWrapper}
+                    />
+                  </View>
+                  <View style={styles.row}>
+                    <CustomInput
+                      label="Age (Week)"
+                      value={formState.ageWeek}
+                      onChangeText={text => updateFormState('ageWeek', text)}
+                      editable={false}
+                      style={styles.disabledInput}
+                      containerStyle={styles.inputWrapper}
+                    />
+                    <CustomInput
+                      label="Opening Quantity"
+                      value={formState.openingQuantity}
+                      onChangeText={text =>
+                        updateFormState('openingQuantity', text)
+                      }
+                      editable={false}
+                      style={styles.disabledInput}
+                      containerStyle={styles.inputWrapper}
+                    />
+                  </View>
+                  <View style={styles.row}>
+                    <CustomInput
+                      label="Start Date"
+                      value={formState.startDate}
+                      onChangeText={text => updateFormState('startDate', text)}
+                      editable={false}
+                      style={styles.disabledInput}
+                      containerStyle={styles.inputWrapper}
+                    />
+                  </View>
+                </>
+              )}
               <CalendarComponent
                 postingStatus="sss"
                 postingDate={formState.postingDate}
@@ -549,57 +648,8 @@ const EditDataEntry = ({route}) => {
                   updateFormState('postingDate', day);
                 }}
                 {...getCalendarConstraints()}
+                containerStyle={styles.inputWrapper}
               />
-              {formState.showAdditionalFields && (
-                <>
-                  <CustomInput
-                    label="Sub Location Name"
-                    value={formState.subLocationName}
-                    onChangeText={text =>
-                      updateFormState('subLocationName', text)
-                    }
-                    editable={false}
-                    style={styles.disabledInput}
-                  />
-                  <CustomInput
-                    label="Age (Days)"
-                    value={formState.ageDays}
-                    onChangeText={text => updateFormState('ageDays', text)}
-                    editable={false}
-                    style={styles.disabledInput}
-                  />
-                  <CustomInput
-                    label="Age (Week)"
-                    value={formState.ageWeek}
-                    onChangeText={text => updateFormState('ageWeek', text)}
-                    editable={false}
-                    style={styles.disabledInput}
-                  />
-                  <CustomInput
-                    label="Opening Quantity"
-                    value={formState.openingQuantity}
-                    onChangeText={text =>
-                      updateFormState('openingQuantity', text)
-                    }
-                    editable={false}
-                    style={styles.disabledInput}
-                  />
-                  <CustomInput
-                    label="Start Date"
-                    value={formState.startDate}
-                    onChangeText={text => updateFormState('startDate', text)}
-                    editable={false}
-                    style={styles.disabledInput}
-                  />
-                  <CustomInput
-                    label="Running Cost"
-                    value={formState.runningCost}
-                    onChangeText={text => updateFormState('runningCost', text)}
-                    editable={false}
-                    style={styles.disabledInput}
-                  />
-                </>
-              )}
               <CustomInput
                 label="Remark"
                 value={formState.Remark}
@@ -730,7 +780,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   section: {
-    marginBottom: 20,
+    // marginBottom: 20,
   },
   section1: {
     marginBottom: 20,
@@ -771,6 +821,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+  },
+  sectionTitleHeader1: {
+    justifyContent: 'center',
   },
   disabledInput: {
     backgroundColor: '#f0f0f0',
@@ -813,6 +866,21 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: '#fff',
     fontSize: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  inputWrapper: {
+    width: '48%',
+  },
+  inputWrapper1: {
+    width: '25%',
+  },
+  textParameterNameContainer: {
+    width: '30%',
+    justifyContent: 'center',
   },
 });
 

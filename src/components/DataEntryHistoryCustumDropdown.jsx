@@ -37,12 +37,13 @@ export default CustomDropdown;
 
 const styles = StyleSheet.create({
   dropdownContainer: {
-    marginBottom: 15,
+    // marginBottom: 15,
+    width: '100%',
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
     paddingBottom: 5,
+    color: '#555',
   },
   dropdown: {
     backgroundColor: '#FFF',

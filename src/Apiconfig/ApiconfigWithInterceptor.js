@@ -4,7 +4,8 @@ import {Alert} from 'react-native';
 import {appStorage} from '../utils/services/StorageHelper';
 
 const api = axios.create({
-  baseURL: 'https://poultryapidev.navfarm.com/api',
+  // baseURL: 'https://poultryapidev.navfarm.com/api',
+  baseURL: 'https://poultryapidemo.navfarm.com/api',
   headers: {
     'Content-Type': 'application/json',
     'X-ApiKey': 'MyRandomApiKeyValue',

@@ -1,111 +1,368 @@
-import React from 'react';
-import {View, Text, ScrollView, Dimensions, StyleSheet} from 'react-native';
+import React, {useEffect, useCallback, useState} from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Dimensions,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import {PieChart} from 'react-native-chart-kit';
 import Header from '../../../components/HeaderComp';
 import {useNavigation} from '@react-navigation/native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  withDelay,
+} from 'react-native-reanimated';
+import {appStorage} from '../../../utils/services/StorageHelper';
+import api from '../../../Apiconfig/ApiconfigWithInterceptor';
+import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
+import {CHART_COLORS} from '../../../utils/JSON/ChartColors';
 
 const screenWidth = Dimensions.get('window').width;
 
-const metrics = [
-  {label: 'CB Output', value: '0'},
-  {label: 'Egg Cost', value: '0.00'},
-  {label: 'M DOC Cost', value: '0.00'},
-  {label: 'F DOC Cost', value: '0.00'},
-  {label: 'LA. FCR', value: '0.00'},
-  {label: 'CB. FCR', value: '0.00'},
-  {label: 'Bird Cost', value: '0.00'},
-  {label: 'Mortality', value: '0'},
-  {label: 'CULL', value: '1100'},
-  {label: 'Feed (Kg)', value: '42.00'},
-  {label: 'Running Cost (K)', value: '2862'},
-  {label: 'Sales (K)', value: '111.00'},
-];
+// Function to get a unique color
+const getUniqueColor = index => CHART_COLORS[index % CHART_COLORS.length];
 
-const runningCostData = [
-  {
-    name: 'delhi A',
-    population: 105200,
-    color: '#A5F2A8',
-    legendFontColor: '#7F7F7F',
-    legendFontSize: 12,
-  },
-  {
-    name: 'delhi B',
-    population: 300000,
-    color: '#FFA726',
-    legendFontColor: '#7F7F7F',
-    legendFontSize: 12,
-  },
-  {
-    name: 'Noida 01',
-    population: 2502000,
-    color: '#42A5F5',
-    legendFontColor: '#7F7F7F',
-    legendFontSize: 12,
-  },
-  {
-    name: 'NOIDA2',
-    population: 0,
-    color: '#EC407A',
-    legendFontColor: '#7F7F7F',
-    legendFontSize: 12,
-  },
-];
+// Memoized Card component
+const MetricCard = React.memo(({item, index, delay}) => {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(20);
 
-const outputData = [
-  {
-    name: 'delhi A',
-    population: 10,
-    color: '#A5F2A8',
-    legendFontColor: '#7F7F7F',
-    legendFontSize: 12,
-  },
-  {
-    name: 'Noida 01',
-    population: 141,
-    color: '#42A5F5',
-    legendFontColor: '#7F7F7F',
-    legendFontSize: 12,
-  },
-];
+  useEffect(() => {
+    // Stagger animation based on index
+    opacity.value = withDelay(
+      delay + index * 100,
+      withTiming(1, {duration: 400}),
+    );
+    translateY.value = withDelay(
+      delay + index * 100,
+      withTiming(0, {duration: 400}),
+    );
+  }, [opacity, translateY, index, delay]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{translateY: translateY.value}],
+  }));
+
+  return (
+    <Animated.View style={[styles.card, animatedStyle]}>
+      <Text style={styles.cardTitle}>{item.label}</Text>
+      <Text style={styles.cardValue}>{item.value}</Text>
+      <View
+        style={{
+          height: 1,
+          backgroundColor: '#FFFFFF',
+          width: '100%',
+          marginTop: 6,
+        }}
+      />
+    </Animated.View>
+  );
+});
+
+// Legend component
+const Legend = ({data}) => {
+  return (
+    <View style={styles.legendContainer}>
+      {data.map((item, index) => (
+        <View key={index} style={styles.legendItem}>
+          <View style={[styles.legendDot, {backgroundColor: item.color}]} />
+          <Text style={styles.legendLabel}>{item.name}</Text>
+        </View>
+      ))}
+    </View>
+  );
+};
+
+// Memoized PieChart component
+const AnimatedPieChart = React.memo(({title, data, delay}) => {
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.8);
+
+  useEffect(() => {
+    opacity.value = withDelay(delay, withTiming(1, {duration: 500}));
+    scale.value = withDelay(
+      delay,
+      withSequence(
+        withTiming(1.05, {duration: 300}),
+        withTiming(1, {duration: 200}),
+      ),
+    );
+  }, [opacity, scale, delay]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{scale: scale.value}],
+  }));
+
+  const [isLoaded, setIsLoaded] = React.useState(false);
+
+  // Simulate chart loading
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoaded(true), delay);
+    return () => clearTimeout(timer);
+  }, [delay]);
+
+  return (
+    <View>
+      <Text style={styles.chartTitle}>{title}</Text>
+      {isLoaded ? (
+        <Animated.View style={animatedStyle}>
+          <PieChart
+            data={data}
+            width={screenWidth - 20}
+            height={250}
+            chartConfig={chartConfig}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute
+            hasLegend={false}
+          />
+          <Legend data={data} /> {/* Render the legend below the chart */}
+        </Animated.View>
+      ) : (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#16a085" />
+        </View>
+      )}
+    </View>
+  );
+});
 
 const DashboardScreen = () => {
   const navigation = useNavigation();
+  const [loading, setLoading] = useState(false);
+  const [metrics, setMetrics] = useState([]);
+  const [runningCostData, setRunningCostData] = useState([]);
+  const [outputData, setOutputData] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  const handleFilterPress = useCallback(() => {
+    navigation.openDrawer();
+  }, [navigation]);
+
+  const getDashboardData = async () => {
+    try {
+      setLoading(true);
+      const userDataString = await appStorage.getUserData();
+      const commonDetails = await appStorage.getCommonDetails();
+      const selectedData = await appStorage.getSelectedCategory();
+      console.log('selectedData', selectedData);
+
+      if (!selectedData) {
+        console.error('No Selected data found in Found');
+        return;
+      }
+
+      if (!userDataString) {
+        console.error('No user data found in Found');
+        return;
+      }
+
+      const userData = userDataString;
+      const commonDetailsData = commonDetails;
+      console.log('userData', userData);
+      console.log('commonDetailsData', commonDetailsData);
+
+      if (!userData.companY_ID || !commonDetailsData.naturE_ID) {
+        console.error('Company ID and natureId is missing from user data');
+        return;
+      }
+
+      const response = await api.get(API_ENDPOINTS.DASHBOARD_DATA, {
+        params: {
+          company_id: userData.companY_ID,
+          Nature_Id: selectedData.value,
+          user_id: userData.useR_ID,
+        },
+      });
+
+      console.log('response1111', response.data);
+      if (response.data.status === 'success') {
+        const apiData = response.data.data[0].data[0];
+        const newMetrics = apiData.labels.map((label, index) => ({
+          label,
+          value: apiData.values[index],
+        }));
+        setMetrics(newMetrics);
+      } else {
+        // Handle error
+      }
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDashboardLocationRunningData = async () => {
+    try {
+      setLoading(true);
+      const userDataString = await appStorage.getUserData();
+      const commonDetails = await appStorage.getCommonDetails();
+      const selectedData = await appStorage.getSelectedCategory();
+      console.log('selectedData', selectedData);
+
+      if (!selectedData) {
+        console.error('No Selected data found in Found');
+        return;
+      }
+
+      if (!userDataString) {
+        console.error('No user data found in Found');
+        return;
+      }
+
+      const userData = userDataString;
+      const commonDetailsData = commonDetails;
+      console.log('userData', userData);
+      console.log('commonDetailsData', commonDetailsData);
+
+      if (!userData.companY_ID || !commonDetailsData.naturE_ID) {
+        console.error('Company ID and natureId is missing from user data');
+        return;
+      }
+
+      const response = await api.get(API_ENDPOINTS.LocationRunningCostGraph, {
+        params: {
+          company_id: userData.companY_ID,
+          Nature_Id: selectedData.value,
+          user_id: userData.useR_ID,
+        },
+      });
+
+      console.log('Running graph data', response.data);
+      if (response.data.status === 'success') {
+        const runningData = JSON.parse(response.data.data.result);
+        const newRunningCostData = runningData.map((item, index) => ({
+          name: item.LOCATION_NAME,
+          population: item.RUNNING_COST,
+          color: getUniqueColor(index),
+          legendFontColor: '#7F7F7F',
+          legendFontSize: 12,
+        }));
+        setRunningCostData(newRunningCostData);
+      } else {
+        // Handle error
+      }
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDashboardLocationOutputData = async () => {
+    try {
+      setLoading(true);
+      const userDataString = await appStorage.getUserData();
+      const commonDetails = await appStorage.getCommonDetails();
+      const selectedData = await appStorage.getSelectedCategory();
+      console.log('selectedData', selectedData);
+
+      if (!selectedData) {
+        console.error('No Selected data found in Found');
+        return;
+      }
+
+      if (!userDataString) {
+        console.error('No user data found in Found');
+        return;
+      }
+
+      const userData = userDataString;
+      const commonDetailsData = commonDetails;
+      console.log('userData', userData);
+      console.log('commonDetailsData', commonDetailsData);
+
+      if (!userData.companY_ID || !commonDetailsData.naturE_ID) {
+        console.error('Company ID and natureId is missing from user data');
+        return;
+      }
+
+      const response = await api.get(API_ENDPOINTS.LocationOutputGraph, {
+        params: {
+          company_id: userData.companY_ID,
+          Nature_Id: selectedData.value,
+          user_id: userData.useR_ID,
+        },
+      });
+
+      console.log('Output graph data', response.data);
+      if (response.data.status === 'success') {
+        const outputData = JSON.parse(response.data.data.result);
+        const newOutputData = outputData.map((item, index) => ({
+          name: item.LOCATION_NAME,
+          population: item.OUT_PUT,
+          color: getUniqueColor(index),
+          legendFontColor: '#7F7F7F',
+          legendFontSize: 12,
+        }));
+        setOutputData(newOutputData);
+        setDataLoaded(true); // Set dataLoaded to true after data is fetched
+      } else {
+        // Handle error
+      }
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      await Promise.all([
+        getDashboardData(),
+        getDashboardLocationRunningData(),
+        getDashboardLocationOutputData(),
+      ]);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <>
-      <Header title="Dashboard" onFilterPress={() => navigation.openDrawer()} />
-      <ScrollView style={styles.container}>
+      <Header title="Dashboard" onFilterPress={handleFilterPress} />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
         <View style={styles.cardsContainer}>
           {metrics.map((item, index) => (
-            <View key={index} style={styles.card}>
-              <Text style={styles.cardTitle}>{item.label}</Text>
-              <Text style={styles.cardValue}>{item.value}</Text>
-            </View>
+            <MetricCard
+              key={item.label}
+              item={item}
+              index={index}
+              delay={dataLoaded ? 0 : 1000}
+            />
           ))}
         </View>
 
-        <Text style={styles.chartTitle}>Location wise Running Cost</Text>
-        <PieChart
+        <AnimatedPieChart
+          title="Location wise Running Cost"
           data={runningCostData}
-          width={screenWidth - 20}
-          height={220}
-          chartConfig={chartConfig}
-          accessor="population"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          absolute
+          delay={dataLoaded ? metrics.length * 100 + 200 : 1000} // After cards
         />
 
-        <Text style={styles.chartTitle}>Location wise Output</Text>
-        <PieChart
+        <AnimatedPieChart
+          title="Location wise Output"
           data={outputData}
-          width={screenWidth - 20}
-          height={220}
-          chartConfig={chartConfig}
-          accessor="population"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          absolute
+          delay={dataLoaded ? metrics.length * 100 + 400 : 1000} // Slightly after first chart
         />
       </ScrollView>
     </>
@@ -125,6 +382,9 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#F2F2F2',
   },
+  scrollContent: {
+    paddingBottom: 20,
+  },
   cardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -132,15 +392,9 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '48%',
-    backgroundColor: '#16a085',
+    backgroundColor: '#20B2AA',
     padding: 15,
-    borderRadius: 10,
     marginVertical: 6,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
   },
   cardTitle: {
     color: '#fff',
@@ -149,7 +403,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   cardValue: {
-    color: '#fff',
+    color: '#000',
     fontSize: 18,
     fontWeight: '600',
   },
@@ -159,6 +413,33 @@ const styles = StyleSheet.create({
     marginTop: 25,
     marginBottom: 10,
     paddingHorizontal: 5,
+  },
+  loaderContainer: {
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  legendContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    marginVertical: 2,
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 5,
+  },
+  legendLabel: {
+    fontSize: 12,
+    color: '#333',
   },
 });
 

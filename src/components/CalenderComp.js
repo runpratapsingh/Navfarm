@@ -91,9 +91,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '70%',
+    width: '100%',
     backgroundColor: 'white',
     borderRadius: 10,
+    marginHorizontal: 10,
     padding: 20,
     alignItems: 'center',
   },

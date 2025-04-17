@@ -20,6 +20,9 @@ import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
 import {navigate} from '../../../utils/services/NavigationService';
 import {appStorage} from '../../../utils/services/StorageHelper';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
+import Header from '../../../components/HeaderComp';
+import {useTab} from '../../../hooks/TabContext';
+import {COLORS} from '../../../theme/theme';
 
 const initialData = [
   {key: 'poultry', label: 'Poultry', image: requireImage.poultry},
@@ -32,6 +35,8 @@ const Card = ({image, label, item}) => {
   const scale = useSharedValue(1);
   const borderRadius = useSharedValue(20);
   const navigation = useNavigation();
+  const {setActiveTab} = useTab();
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{scale: withSpring(scale.value)}],
@@ -45,7 +50,8 @@ const Card = ({image, label, item}) => {
       borderRadius.value = 10;
       console.log('Card clicked:', item);
       await appStorage.setSelectedCategory(item);
-      navigation.navigate('DataEntry');
+      // navigation.navigate('DataEntry');
+      setActiveTab('DataEntry');
     } catch (error) {
       console.log('Error in OnpressOutClick:', error);
     }
@@ -69,8 +75,9 @@ const Card = ({image, label, item}) => {
 };
 
 const HomeScreen = () => {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
 
   const getDashboardData = async () => {
     try {
@@ -103,26 +110,30 @@ const HomeScreen = () => {
       });
 
       const nobData = response.data.data.nob;
-      const filteredNobData = nobData.filter(item => item.selected);
-      console.log(
-        'Dashboard Data111:-----',
-        response.data.data,
-        filteredNobData,
-      );
+      if (response.data.status === 'success') {
+        const filteredNobData = nobData.filter(item => item.selected);
+        console.log(
+          'Dashboard Data111:-----',
+          response.data.data,
+          filteredNobData,
+        );
 
-      // Map filteredNobData to the structure of initialData
-      const updatedData = filteredNobData.map(item => {
-        const key = item.text.toLowerCase(); // Assuming 'text' in filteredNobData matches 'label' in initialData
-        return {
-          key: key,
-          label: item.text,
-          image: requireImage[key],
-          value: item.value,
-          selected: item.selected,
-        };
-      });
+        // Map filteredNobData to the structure of initialData
+        const updatedData = filteredNobData.map(item => {
+          const key = item.text.toLowerCase(); // Assuming 'text' in filteredNobData matches 'label' in initialData
+          return {
+            key: key,
+            label: item.text,
+            image: requireImage[key],
+            value: item.value,
+            selected: item.selected,
+          };
+        });
 
-      setData(updatedData);
+        setData(updatedData);
+      } else {
+        setData([]);
+      }
     } catch (error) {
       console.error('API Error:', error);
       throw error;
@@ -141,8 +152,15 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
+      <Header
+        title="Category selection"
+        onFilterPress={() => navigation.openDrawer()}
+      />
       <View style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
+        <StatusBar
+          barStyle="light-content"
+          backgroundColor={COLORS.primaryColor}
+        />
         {!loading && (
           <FlatList
             data={data}

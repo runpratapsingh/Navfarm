@@ -7,10 +7,11 @@ const CustomInput = ({
   onChangeText,
   editable = true,
   style,
+  containerStyle,
   ...props
 }) => {
   return (
-    <View style={styles.inputContainer}>
+    <View style={[styles.inputContainer, containerStyle]}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
         style={[
@@ -32,6 +33,7 @@ const CustomInput = ({
 const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 10,
+    width: '100%',
   },
   label: {
     fontSize: 14,
@@ -41,7 +43,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 4,
-    padding: 8,
     fontSize: 14,
     marginTop: 4,
     backgroundColor: '#fff',

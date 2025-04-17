@@ -232,6 +232,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 20,
   },
   searchText: {
     color: '#FFF',

@@ -1,4 +1,4 @@
-const BASE_URL = `https://poultryapidev.navfarm.com/api`;
+const BASE_URL = `https://poultryapidemo.navfarm.com/api`;
 
 export const AUTH_HEADERS = {
   'Content-Type': 'application/json',
@@ -19,4 +19,7 @@ export const API_ENDPOINTS = {
   NOB_Dropdown_Data: '/get_nob',
   LOB_Dropdown_Data: '/get_lob',
   BATCH_Dropdown_Data: '/get_batches',
+  DASHBOARD_DATA: '/get_dashboard',
+  LocationOutputGraph: '/get_dashboard_location_output_graph',
+  LocationRunningCostGraph: '/get_dashboard_location_running_cost_graph',
 };
