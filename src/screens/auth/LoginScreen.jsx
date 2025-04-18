@@ -25,6 +25,8 @@ import api from '../../Apiconfig/ApiconfigWithInterceptor';
 import {appStorage} from '../../utils/services/StorageHelper';
 import ErrorModal from '../../components/CustumModal';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {initDatabase} from '../../services/OfflineServices/Database';
+import {initDatabaseForDataEntry} from '../../services/OfflineServices/DataentryOfflineDB';
 
 const SignInScreen = () => {
   const [password, setPassword] = useState('');
@@ -37,6 +39,15 @@ const SignInScreen = () => {
   const [errorVisible, setErrorVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const navigation = useNavigation();
+
+  const initializeDatabases = async () => {
+    try {
+      await initDatabase();
+      await initDatabaseForDataEntry();
+    } catch (error) {
+      console.error('Error initializing databases:', error);
+    }
+  };
 
   useEffect(() => {
     checkFormValidity();
@@ -101,6 +112,7 @@ const SignInScreen = () => {
           if (storedToken) {
             await fetchCommonDetails(userData.companY_ID, userData.useR_ID);
           }
+          await initializeDatabases();
         }
       } else {
         setErrorMessage(response.data?.message || 'Something went wrong');

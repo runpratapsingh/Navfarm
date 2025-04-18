@@ -6,8 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   FlatList,
-  Modal,
-  TextInput,
   StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -16,14 +14,25 @@ import CustomInput from '../../../../components/CustumInputField';
 import HeaderWithBtn from '../../../../components/HeaderWithBackBtn';
 import {appStorage} from '../../../../utils/services/StorageHelper';
 import {API_ENDPOINTS} from '../../../../Apiconfig/Apiconfig';
-import api from '../../../../Apiconfig/ApiconfigWithInterceptor';
 import DataEntryAddLine from './DataEntry_AddLine';
 import {navigate} from '../../../../utils/services/NavigationService';
 import CustomDropdown from '../../../../components/DataEntryHistoryCustumDropdown';
 import StatusModal from '../../../../components/CustumModal';
-import {Calendar} from 'react-native-calendars';
 import CalendarComponent from '../../../../components/CalenderComp';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {
+  fetchData,
+  postDataEntry,
+  syncOfflineData,
+} from '../../../../services/ApiServices/Apiservice';
+import {subscribeToNetworkChanges} from '../../../../services/NetworkServices/Network';
+import {
+  cacheApiResponseForDataEntry,
+  getCachedResponseForDataEntry,
+  saveOfflineDataEntryForDataEntry,
+  getUnsyncedDataEntriesForDataEntry,
+  markAsSyncedForDataEntry,
+} from '../../../../services/OfflineServices/DataentryOfflineDB';
 
 const EditDataEntry = ({route}) => {
   const {batch_id} = route.params;
@@ -59,9 +68,9 @@ const EditDataEntry = ({route}) => {
   const [visible, setVisible] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
   const [modalType, setModalType] = useState('error');
-  const [calendarVisible, setCalendarVisible] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState({});
   const [isFormVisible, setIsFormVisible] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({});
+  const [isOnline, setIsOnline] = useState(true);
 
   const formatDateForCalendar = dateStr => {
     const [day, month, year] = dateStr.split('-');
@@ -174,8 +183,6 @@ const EditDataEntry = ({route}) => {
 
       // Validation checks for lineData
       for (const item of lineData) {
-        console.log('item', item);
-
         if (!item.actuaL_VALUE?.toString()) {
           setModalType('error');
           setResponseMessage("'Actual Value' & 'Unit Cost' can not be blank");
@@ -193,10 +200,10 @@ const EditDataEntry = ({route}) => {
       const userDataString = await appStorage.getUserData();
       const userData = userDataString;
 
-      console.log('User data----------------->', userData);
-
       if (!userData.companY_ID) {
-        console.error('Company ID is missing from user data');
+        setModalType('error');
+        setResponseMessage('Company ID is missing');
+        setVisible(true);
         return;
       }
 
@@ -257,31 +264,113 @@ const EditDataEntry = ({route}) => {
         livestock: [],
       };
 
-      console.log('Saving data:----------------->', updatedData, {
+      console.log('Saving data:', updatedData, {
         BATCH_ID: batch_id?.toString(),
         BATCH_NO: formState.batch_No,
       });
 
-      const response = await api.post(
-        API_ENDPOINTS.SaveAndPostDataEntry,
-        updatedData,
-      );
-      if (response.data?.status === 'success') {
-        getDataEntryDetails();
-        console.log('Data saved successfully:', response.data);
-        setResponseMessage(response.data?.message || 'Operation successful.');
-        setVisible(true);
+      let response;
+      if (isOnline) {
+        response = await postDataEntry(updatedData, batch_id);
+      } else {
+        // Save offline if network is unavailable
+        response = await new Promise(resolve => {
+          saveOfflineDataEntryForDataEntry(
+            updatedData,
+            API_ENDPOINTS.DataEntrySubmit,
+            batch_id,
+            insertId => {
+              if (insertId) {
+                resolve({
+                  status: 'queued',
+                  message: 'Data saved offline and will sync when online',
+                });
+              } else {
+                resolve({
+                  status: 'error',
+                  message: 'Failed to save data offline',
+                });
+              }
+            },
+          );
+        });
+      }
+
+      if (response.status === 'queued') {
+        setResponseMessage('Data saved offline and will sync when online');
+        setModalType('warning');
+      } else if (response.status === 'success') {
+        await getDataEntryDetails(); // Refresh data
+        setResponseMessage(response.message || 'Data saved successfully');
         setModalType('success');
       } else {
-        console.error('Failed to save data:', response.data);
-        setResponseMessage(response.data?.message || 'Something went wrong');
-        setVisible(true);
+        setResponseMessage(response.message || 'Failed to save data');
         setModalType('error');
       }
+      setVisible(true);
     } catch (error) {
-      console.error('API Error:', error);
+      console.error('Error saving data:', error.message);
+      // Attempt to save offline on error
+      try {
+        await new Promise(resolve => {
+          saveOfflineDataEntryForDataEntry(
+            updatedData,
+            API_ENDPOINTS.DataEntrySubmit,
+            batch_id,
+            insertId => {
+              resolve(insertId);
+            },
+          );
+        });
+        setResponseMessage(
+          'Data saved offline due to error and will sync when online',
+        );
+        setModalType('warning');
+      } catch (offlineError) {
+        console.error('Error saving offline:', offlineError.message);
+        setResponseMessage('Failed to save data');
+        setModalType('error');
+      }
+      setVisible(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const syncOfflineDataEntries = async () => {
+    try {
+      const unsyncedEntries = await new Promise(resolve => {
+        getUnsyncedDataEntriesForDataEntry(resolve);
+      });
+
+      if (unsyncedEntries.length === 0) {
+        console.log('No unsynced data entries to sync.');
+        return;
+      }
+
+      for (const entry of unsyncedEntries) {
+        const data = JSON.parse(entry.data);
+        const response = await postDataEntry(data, entry.batch_id);
+        if (response.status === 'success') {
+          await markAsSyncedForDataEntry(entry.id);
+          console.log(`Synced data entry ID ${entry.id}`);
+        } else {
+          console.warn(
+            `Failed to sync data entry ID ${entry.id}:`,
+            response.message,
+          );
+        }
+      }
+
+      setResponseMessage('Offline data synced successfully');
+      setModalType('success');
+      setVisible(true);
+      await getDataEntryDetails(); // Refresh data after sync
+    } catch (error) {
+      console.error('Error syncing offline data:', error.message);
+      setResponseMessage('Failed to sync offline data');
+      setModalType('error');
+      setVisible(true);
     }
   };
 
@@ -296,19 +385,40 @@ const EditDataEntry = ({route}) => {
     }));
   };
 
-  const updateLineData = (index, key, value) => {
-    setLineData(prevData =>
-      prevData.map((item, i) => (i === index ? {...item, [key]: value} : item)),
-    );
+  const updateGroupedData = (type, index, key, value) => {
+    const updatedGrouped = {...groupedData};
+
+    const parsedValue =
+      key === 'uniT_COST' || key === 'actuaL_VALUE'
+        ? parseFloat(value) || 0
+        : value;
+
+    // Update groupedData
+    const updatedItems = [...updatedGrouped[type]];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      [key]: parsedValue,
+    };
+    updatedGrouped[type] = updatedItems;
+
+    // Set groupedData
+    setGroupedData(updatedGrouped);
+
+    // Flatten and update lineData
+    const flattened = Object.values(updatedGrouped).flat();
+    setLineData(flattened);
   };
 
   const getDataEntryDetails = async () => {
     try {
+      setLoading(true);
       const userDataString = await appStorage.getUserData();
       const commonDetails = await appStorage.getCommonDetails();
 
       if (!userDataString || !commonDetails) {
-        console.error('No user data or common details found');
+        setResponseMessage('No user data or common details found');
+        setModalType('error');
+        setVisible(true);
         return;
       }
 
@@ -316,27 +426,60 @@ const EditDataEntry = ({route}) => {
       const commonDetailsData = commonDetails;
 
       if (!userData.companY_ID || !commonDetailsData.naturE_ID) {
-        console.error('Company ID and natureId is missing from user data');
+        setResponseMessage('Company ID or natureId is missing');
+        setModalType('error');
+        setVisible(true);
         return;
       }
 
-      const response = await api.get(API_ENDPOINTS.DataEntryDetails, {
-        params: {
-          Company_Id: userData.companY_ID,
-          batch_id: batch_id,
-        },
-      });
+      const params = {
+        Company_Id: userData.companY_ID,
+        batch_id: batch_id,
+      };
 
-      console.log(
-        'response---------------',
-        response.data,
-        batch_id,
-        response.data?.data?.line,
-      );
+      let response;
+      if (isOnline) {
+        response = await fetchData(
+          API_ENDPOINTS.DataEntryDetails,
+          params,
+          batch_id,
+        );
+        if (response.status === 'success') {
+          // Cache the response
+          await new Promise(resolve => {
+            cacheApiResponseForDataEntry(
+              API_ENDPOINTS.DataEntryDetails,
+              batch_id,
+              response,
+              resolve,
+            );
+          });
+        } else {
+          setResponseMessage(
+            response.message || 'Failed to load batch details',
+          );
+          setModalType('error');
+          setVisible(true);
+        }
+      } else {
+        // Try to fetch cached data
+        response = await new Promise(resolve => {
+          getCachedResponseForDataEntry(
+            API_ENDPOINTS.DataEntryDetails,
+            batch_id,
+            resolve,
+          );
+        });
+        if (!response) {
+          throw new Error('No cached data available');
+        }
+      }
 
-      if (response.data?.status === 'success') {
-        const header = response.data?.data?.header?.[0];
-        const line = response.data?.data?.line || [];
+      console.log('Fetched data:', response, 'batch_id:', batch_id);
+
+      if (response.status === 'success') {
+        const header = response.data?.header?.[0] || {};
+        const line = response.data?.line || [];
         setLineData(line);
         setFormState(prevState => ({
           ...prevState,
@@ -345,7 +488,9 @@ const EditDataEntry = ({route}) => {
           remainingQty: header.remaininG_QTY?.toString() || '',
           breedName: header.breeD_NAME || '',
           templateName: header.templatE_NAME || '',
-          postingDate: formatDateForCalendar(header.p_DATE) || '',
+          postingDate: header.p_DATE
+            ? formatDateForCalendar(header.p_DATE)
+            : '',
           subLocationName: header.locatioN_NAME || '',
           ageDays: header.agE_DAYS?.toString() || '',
           ageWeek: header.agE_WEEK?.toString() || '',
@@ -382,19 +527,104 @@ const EditDataEntry = ({route}) => {
           }, {}),
         );
       } else {
-        setResponseMessage(response.data?.message || 'Something went wrong');
+        setResponseMessage(response.message || 'Failed to load batch details');
         setModalType('error');
         setVisible(true);
       }
     } catch (error) {
-      console.error('API Error:', error);
-      throw error;
+      console.error('Error fetching batch details:', error.message);
+      // Try to fetch cached data
+      try {
+        const cachedResponse = await new Promise(resolve => {
+          getCachedResponseForDataEntry(
+            API_ENDPOINTS.DataEntryDetails,
+            batch_id,
+            resolve,
+          );
+        });
+        if (cachedResponse.status === 'success') {
+          console.log('Using cached data:', cachedResponse);
+          setResponseMessage('Loaded cached data due to network issue');
+          setModalType('warning');
+          setVisible(true);
+
+          const header = cachedResponse.data?.header?.[0] || {};
+          const line = cachedResponse.data?.line || [];
+          setLineData(line);
+          setFormState(prevState => ({
+            ...prevState,
+            natureOfBusiness: header.naturE_OF_BUSINESS || '',
+            lineOfBusiness: header.linE_OF_BUSINESS || '',
+            remainingQty: header.remaininG_QTY?.toString() || '',
+            breedName: header.breeD_NAME || '',
+            templateName: header.templatE_NAME || '',
+            postingDate: header.p_DATE
+              ? formatDateForCalendar(header.p_DATE)
+              : '',
+            subLocationName: header.locatioN_NAME || '',
+            ageDays: header.agE_DAYS?.toString() || '',
+            ageWeek: header.agE_WEEK?.toString() || '',
+            openingQuantity: header.openinG_QTY?.toString() || '',
+            startDate: header.s_DATE || '',
+            runningCost: header.runninG_COST?.toString() || '',
+            batch_No: header.batcH_NO || '',
+            nob_id: header.noB_ID || 0,
+            lob_id: header.loB_ID || 0,
+            template_id: header.templatE_ID || 0,
+            location: header.locatioN_ID || 0,
+            batch_id: header.batcH_ID?.toString(),
+            CREATED_BY: header.createD_BY?.toString(),
+            Remark: header.remark || '',
+            DataEntryId: header.dataentrY_ID || 0,
+            postingStatus: header.status || '',
+          }));
+
+          const grouped = line.reduce((acc, item) => {
+            const type = item.parameteR_TYPE;
+            if (!acc[type]) {
+              acc[type] = [];
+            }
+            acc[type].push(item);
+            return acc;
+          }, {});
+
+          setGroupedData(grouped);
+          setExpandedGroups(
+            Object.keys(grouped).reduce((acc, key) => {
+              acc[key] = false;
+              return acc;
+            }, {}),
+          );
+        } else {
+          setResponseMessage(
+            cachedResponse.message ||
+              'Failed to load data. No cached data available.',
+          );
+          setModalType('error');
+          setVisible(true);
+        }
+      } catch (cacheError) {
+        console.error('Error fetching cached data:', cacheError.message);
+        setResponseMessage('Failed to load data. No cached data available.');
+        setModalType('error');
+        setVisible(true);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     getDataEntryDetails();
-  }, []);
+    const unsubscribe = subscribeToNetworkChanges(isConnected => {
+      setIsOnline(isConnected);
+      if (isConnected) {
+        syncOfflineData(); // Existing sync for other data
+        syncOfflineDataEntries(); // Sync data entries
+      }
+    });
+    return () => unsubscribe();
+  }, [batch_id, isOnline]); // Add dependencies if needed
 
   const toggleGroup = group => {
     setExpandedGroups(prevState => ({
@@ -406,27 +636,25 @@ const EditDataEntry = ({route}) => {
   const renderLineItem = ({item, index}) => (
     <View style={styles.section} key={index}>
       <View style={styles.row}>
-        {/* <CustomInput
-          label="Parameter Name"
-          value={item.parameteR_NAME}
-          onChangeText={text => updateLineData(index, 'actuaL_VALUE', text)}
-          containerStyle={styles.inputWrapper}
-          editable={false}
-          style={styles.disabledInput}
-        /> */}
         <View style={styles.textParameterNameContainer}>
           <Text style={styles.sectionTitle}>{item.parameteR_NAME || ''}</Text>
         </View>
         <CustomInput
           label="Total Units"
           value={item.actuaL_VALUE?.toString()}
-          onChangeText={text => updateLineData(index, 'actuaL_VALUE', text)}
+          // onChangeText={text => updateLineData(index, 'actuaL_VALUE', text)}
+          onChangeText={text =>
+            updateGroupedData(item.parameteR_TYPE, index, 'actuaL_VALUE', text)
+          }
           containerStyle={styles.inputWrapper1}
         />
         <CustomInput
           label="Cost Per Unit"
           value={item.uniT_COST?.toString()}
-          onChangeText={text => updateLineData(index, 'uniT_COST', text)}
+          // onChangeText={text => updateLineData(index, 'uniT_COST', text)}
+          onChangeText={text =>
+            updateGroupedData(item.parameteR_TYPE, index, 'uniT_COST', text)
+          }
           editable={item.parameteR_NAME === 'Descriptive' ? false : true}
           containerStyle={styles.inputWrapper1}
         />
@@ -442,8 +670,16 @@ const EditDataEntry = ({route}) => {
             <CustomInput
               label="Descriptive"
               value={item.parameter_input_value}
+              // onChangeText={text =>
+              //   updateLineData(index, 'parameter_input_value', text)
+              // }
               onChangeText={text =>
-                updateLineData(index, 'parameter_input_value', text)
+                updateGroupedData(
+                  item.parameteR_TYPE,
+                  index,
+                  'parameter_input_value',
+                  text,
+                )
               }
               placeholder="Enter descriptive value"
               containerStyle={{width: '100%'}}
@@ -452,9 +688,17 @@ const EditDataEntry = ({route}) => {
             <CustomDropdown
               label="Descriptive"
               selectedValue={item.parameter_input_value}
-              onValueChange={value => {
-                updateLineData(index, 'parameter_input_value', value);
-              }}
+              // onValueChange={value => {
+              //   updateLineData(index, 'parameter_input_value', value);
+              // }}
+              onValueChange={text =>
+                updateGroupedData(
+                  item.parameteR_TYPE,
+                  index,
+                  'parameter_input_value',
+                  text,
+                )
+              }
               options={[
                 {id: '', name: 'Select'},
                 ...item.parameter_input_format
@@ -465,19 +709,7 @@ const EditDataEntry = ({route}) => {
             />
           ) : null
         ) : null}
-        {/* <CustomInput
-          label="Item Name"
-          value={item.iteM_NAME}
-          onChangeText={text => updateLineData(index, 'iteM_NAME', text)}
-          editable={false}
-          containerStyle={styles.inputWrapper}
-        /> */}
       </View>
-      {/* <View style={styles.sectionTitleHeader}>
-        <TouchableOpacity onPress={() => handleEyePress(item)}>
-          <Icon name="eye" size={20} color="#000" />
-        </TouchableOpacity>
-      </View> */}
     </View>
   );
 
@@ -487,14 +719,12 @@ const EditDataEntry = ({route}) => {
       today.getMonth() + 1,
     ).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-    console.log('asjfksafgjaagjfgaghj', formState.postingDate, todayFormatted);
-
     if (formState.postingStatus === 'draft') {
       return {
         minDate: formState.postingDate,
         maxDate: formState.postingDate,
       };
-    } else if ('posted' === 'posted') {
+    } else if (formState.postingStatus === 'posted') {
       return {
         minDate: formState.postingDate,
         maxDate: todayFormatted,
@@ -503,233 +733,227 @@ const EditDataEntry = ({route}) => {
   };
 
   return (
-    <>
-      <SafeAreaView style={{flex: 1, backgroundColor: '#2E313F'}}>
-        <StatusBar barStyle="light-content" backgroundColor="#2E313F" />
-        <HeaderWithBtn title="Data Entry" />
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          style={styles.container}>
+    <SafeAreaView style={{flex: 1, backgroundColor: '#2E313F'}}>
+      <StatusBar barStyle="light-content" backgroundColor="#2E313F" />
+      <HeaderWithBtn title="Data Entry" />
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
+        <TouchableOpacity
+          onPress={() =>
+            updateFormState('isHeaderVisible', !formState.isHeaderVisible)
+          }
+          style={styles.headerContainer}>
+          <Text style={styles.headerText}>HEADER ({formState.batch_No})</Text>
           <TouchableOpacity
+            style={styles.toggleButton}
             onPress={() =>
               updateFormState('isHeaderVisible', !formState.isHeaderVisible)
-            }
-            style={styles.headerContainer}>
-            <Text style={styles.headerText}>HEADER ({formState.batch_No})</Text>
-            <TouchableOpacity
-              style={styles.toggleButton}
-              onPress={() =>
-                updateFormState('isHeaderVisible', !formState.isHeaderVisible)
-              }>
-              <Icon
-                name={formState.isHeaderVisible ? 'minus' : 'plus'}
-                size={16}
-                color="#fff"
-              />
-            </TouchableOpacity>
+            }>
+            <Icon
+              name={formState.isHeaderVisible ? 'minus' : 'plus'}
+              size={16}
+              color="#fff"
+            />
           </TouchableOpacity>
+        </TouchableOpacity>
 
-          {formState.isHeaderVisible && (
-            <View style={styles.headerDetails}>
-              <View style={styles.row}>
-                <CustomInput
-                  label="Nature Of Business"
-                  value={formState.natureOfBusiness}
-                  onChangeText={text =>
-                    updateFormState('natureOfBusiness', text)
-                  }
-                  editable={false}
-                  style={styles.disabledInput}
-                  containerStyle={styles.inputWrapper}
-                />
-                <CustomInput
-                  label="Line Of Business"
-                  value={formState.lineOfBusiness}
-                  onChangeText={text => updateFormState('lineOfBusiness', text)}
-                  editable={false}
-                  style={styles.disabledInput}
-                  containerStyle={styles.inputWrapper}
-                />
-              </View>
-              <View style={styles.row}>
-                <CustomInput
-                  label="Remaining Qty"
-                  value={formState.remainingQty}
-                  onChangeText={text => updateFormState('remainingQty', text)}
-                  editable={false}
-                  style={styles.disabledInput}
-                  containerStyle={styles.inputWrapper}
-                />
-                <CustomInput
-                  label="Breed Name"
-                  value={formState.breedName}
-                  onChangeText={text => updateFormState('breedName', text)}
-                  editable={false}
-                  style={styles.disabledInput}
-                  containerStyle={styles.inputWrapper}
-                />
-              </View>
-              <View style={styles.row}>
-                <CustomInput
-                  label="Template Name"
-                  value={formState.templateName}
-                  onChangeText={text => updateFormState('templateName', text)}
-                  editable={false}
-                  style={styles.disabledInput}
-                  containerStyle={styles.inputWrapper}
-                />
-                <CustomInput
-                  label="Running Cost"
-                  value={formState.runningCost}
-                  onChangeText={text => updateFormState('runningCost', text)}
-                  editable={false}
-                  style={styles.disabledInput}
-                  containerStyle={styles.inputWrapper}
-                />
-              </View>
-              {formState.showAdditionalFields && (
-                <>
-                  <View style={styles.row}>
-                    <CustomInput
-                      label="Sub Location Name"
-                      value={formState.subLocationName}
-                      onChangeText={text =>
-                        updateFormState('subLocationName', text)
-                      }
-                      editable={false}
-                      style={styles.disabledInput}
-                      containerStyle={styles.inputWrapper}
-                    />
-                    <CustomInput
-                      label="Age (Days)"
-                      value={formState.ageDays}
-                      onChangeText={text => updateFormState('ageDays', text)}
-                      editable={false}
-                      style={styles.disabledInput}
-                      containerStyle={styles.inputWrapper}
-                    />
-                  </View>
-                  <View style={styles.row}>
-                    <CustomInput
-                      label="Age (Week)"
-                      value={formState.ageWeek}
-                      onChangeText={text => updateFormState('ageWeek', text)}
-                      editable={false}
-                      style={styles.disabledInput}
-                      containerStyle={styles.inputWrapper}
-                    />
-                    <CustomInput
-                      label="Opening Quantity"
-                      value={formState.openingQuantity}
-                      onChangeText={text =>
-                        updateFormState('openingQuantity', text)
-                      }
-                      editable={false}
-                      style={styles.disabledInput}
-                      containerStyle={styles.inputWrapper}
-                    />
-                  </View>
-                  <View style={styles.row}>
-                    <CustomInput
-                      label="Start Date"
-                      value={formState.startDate}
-                      onChangeText={text => updateFormState('startDate', text)}
-                      editable={false}
-                      style={styles.disabledInput}
-                      containerStyle={styles.inputWrapper}
-                    />
-                  </View>
-                </>
-              )}
-              <CalendarComponent
-                postingStatus="sss"
-                postingDate={formState.postingDate}
-                onDateChange={day => {
-                  updateFormState('postingDate', day);
-                }}
-                {...getCalendarConstraints()}
+        {formState.isHeaderVisible && (
+          <View style={styles.headerDetails}>
+            <View style={styles.row}>
+              <CustomInput
+                label="Nature Of Business"
+                value={formState.natureOfBusiness}
+                onChangeText={text => updateFormState('natureOfBusiness', text)}
+                editable={false}
+                style={styles.disabledInput}
                 containerStyle={styles.inputWrapper}
               />
               <CustomInput
-                label="Remark"
-                value={formState.Remark}
-                onChangeText={text => updateFormState('Remark', text)}
-                multiline
-                numberOfLines={4}
-                placeholder="Enter your remark here..."
+                label="Line Of Business"
+                value={formState.lineOfBusiness}
+                onChangeText={text => updateFormState('lineOfBusiness', text)}
+                editable={false}
+                style={styles.disabledInput}
+                containerStyle={styles.inputWrapper}
               />
-              <View style={styles.sectionTitleHeader}>
-                <Text style={styles.sectionTitle}></Text>
+            </View>
+            <View style={styles.row}>
+              <CustomInput
+                label="Remaining Qty"
+                value={formState.remainingQty}
+                onChangeText={text => updateFormState('remainingQty', text)}
+                editable={false}
+                style={styles.disabledInput}
+                containerStyle={styles.inputWrapper}
+              />
+              <CustomInput
+                label="Breed Name"
+                value={formState.breedName}
+                onChangeText={text => updateFormState('breedName', text)}
+                editable={false}
+                style={styles.disabledInput}
+                containerStyle={styles.inputWrapper}
+              />
+            </View>
+            <View style={styles.row}>
+              <CustomInput
+                label="Template Name"
+                value={formState.templateName}
+                onChangeText={text => updateFormState('templateName', text)}
+                editable={false}
+                style={styles.disabledInput}
+                containerStyle={styles.inputWrapper}
+              />
+              <CustomInput
+                label="Running Cost"
+                value={formState.runningCost}
+                onChangeText={text => updateFormState('runningCost', text)}
+                editable={false}
+                style={styles.disabledInput}
+                containerStyle={styles.inputWrapper}
+              />
+            </View>
+            {formState.showAdditionalFields && (
+              <>
+                <View style={styles.row}>
+                  <CustomInput
+                    label="Sub Location Name"
+                    value={formState.subLocationName}
+                    onChangeText={text =>
+                      updateFormState('subLocationName', text)
+                    }
+                    editable={false}
+                    style={styles.disabledInput}
+                    containerStyle={styles.inputWrapper}
+                  />
+                  <CustomInput
+                    label="Age (Days)"
+                    value={formState.ageDays}
+                    onChangeText={text => updateFormState('ageDays', text)}
+                    editable={false}
+                    style={styles.disabledInput}
+                    containerStyle={styles.inputWrapper}
+                  />
+                </View>
+                <View style={styles.row}>
+                  <CustomInput
+                    label="Age (Week)"
+                    value={formState.ageWeek}
+                    onChangeText={text => updateFormState('ageWeek', text)}
+                    editable={false}
+                    style={styles.disabledInput}
+                    containerStyle={styles.inputWrapper}
+                  />
+                  <CustomInput
+                    label="Opening Quantity"
+                    value={formState.openingQuantity}
+                    onChangeText={text =>
+                      updateFormState('openingQuantity', text)
+                    }
+                    editable={false}
+                    style={styles.disabledInput}
+                    containerStyle={styles.inputWrapper}
+                  />
+                </View>
+                <View style={styles.row}>
+                  <CustomInput
+                    label="Start Date"
+                    value={formState.startDate}
+                    onChangeText={text => updateFormState('startDate', text)}
+                    editable={false}
+                    style={styles.disabledInput}
+                    containerStyle={styles.inputWrapper}
+                  />
+                </View>
+              </>
+            )}
+            <CalendarComponent
+              postingStatus={formState.postingStatus}
+              postingDate={formState.postingDate}
+              onDateChange={day => {
+                updateFormState('postingDate', day);
+              }}
+              {...getCalendarConstraints()}
+              containerStyle={styles.inputWrapper}
+            />
+            <CustomInput
+              label="Remark"
+              value={formState.Remark}
+              onChangeText={text => updateFormState('Remark', text)}
+              multiline
+              numberOfLines={4}
+              placeholder="Enter your remark here..."
+            />
+            <View style={styles.sectionTitleHeader}>
+              <Text style={styles.sectionTitle}></Text>
+              <TouchableOpacity
+                onPress={() =>
+                  updateFormState(
+                    'showAdditionalFields',
+                    !formState.showAdditionalFields,
+                  )
+                }>
+                <Icon
+                  name={formState.showAdditionalFields ? 'eye-slash' : 'eye'}
+                  size={20}
+                  color="#000"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        <DataEntryAddLine
+          isFormVisible={isFormVisible}
+          setIsFormVisible={setIsFormVisible}
+        />
+        {isFormVisible && (
+          <View style={styles.lineDetail}>
+            {Object.keys(groupedData).map(group => (
+              <View key={group} style={styles.section1}>
                 <TouchableOpacity
-                  onPress={() =>
-                    updateFormState(
-                      'showAdditionalFields',
-                      !formState.showAdditionalFields,
-                    )
-                  }>
+                  onPress={() => toggleGroup(group)}
+                  style={styles.sectionTitleHeader}>
+                  <Text style={styles.sectionTitle1}>{group}</Text>
                   <Icon
-                    name={formState.showAdditionalFields ? 'eye-slash' : 'eye'}
+                    name={expandedGroups[group] ? 'minus' : 'plus'}
                     size={20}
-                    color="#000"
+                    color={COLORS.primaryColor}
                   />
                 </TouchableOpacity>
+                {expandedGroups[group] && (
+                  <FlatList
+                    data={groupedData[group]}
+                    renderItem={renderLineItem}
+                    keyExtractor={(item, index) => index.toString()}
+                  />
+                )}
               </View>
-            </View>
-          )}
-
-          <DataEntryAddLine
-            isFormVisible={isFormVisible}
-            setIsFormVisible={setIsFormVisible}
-          />
-          {isFormVisible && (
-            <View style={styles.lineDetail}>
-              {Object.keys(groupedData).map(group => (
-                <View key={group} style={styles.section1}>
-                  <TouchableOpacity
-                    onPress={() => toggleGroup(group)}
-                    style={styles.sectionTitleHeader}>
-                    <Text style={styles.sectionTitle1}>{group}</Text>
-                    <Icon
-                      name={expandedGroups[group] ? 'minus' : 'plus'}
-                      size={20}
-                      color={COLORS.primaryColor}
-                    />
-                  </TouchableOpacity>
-                  {expandedGroups[group] && (
-                    <FlatList
-                      data={groupedData[group]}
-                      renderItem={renderLineItem}
-                      keyExtractor={(item, index) => index.toString()}
-                    />
-                  )}
-                </View>
-              ))}
-            </View>
-          )}
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => handleSubmit('draft')}>
-              <Text style={styles.buttonText}>
-                {loading ? 'Saving' : 'Save'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => handleSubmit('posted')}>
-              <Text style={styles.buttonText}>Post</Text>
-            </TouchableOpacity>
+            ))}
           </View>
-        </ScrollView>
-        <StatusModal
-          visible={visible}
-          onClose={() => setVisible(false)}
-          message={responseMessage}
-          type={modalType}
-        />
-      </SafeAreaView>
-    </>
+        )}
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleSubmit('draft')}
+            disabled={loading}>
+            <Text style={styles.buttonText}>{loading ? 'Saving' : 'Save'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleSubmit('posted')}
+            disabled={loading}>
+            <Text style={styles.buttonText}>Post</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+      <StatusModal
+        visible={visible}
+        onClose={() => setVisible(false)}
+        message={responseMessage}
+        type={modalType}
+      />
+    </SafeAreaView>
   );
 };
 
@@ -765,23 +989,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
-  formContainer: {
-    flex: 1,
-    padding: 16,
-  },
   lineDetail: {
     marginBottom: 20,
     padding: 16,
   },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-  },
-  section: {
-    // marginBottom: 20,
-  },
+  section: {},
   section1: {
     marginBottom: 20,
     borderBottomColor: '#ddd',
@@ -827,45 +1039,6 @@ const styles = StyleSheet.create({
   },
   disabledInput: {
     backgroundColor: '#f0f0f0',
-  },
-  inputWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    paddingHorizontal: 5,
-    marginVertical: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-  },
-  icon: {
-    marginLeft: 10,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '70%',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-  },
-  closeButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: COLORS.SecondaryColor,
-    borderRadius: 5,
-  },
-  closeButtonText: {
-    color: '#fff',
-    fontSize: 16,
   },
   row: {
     flexDirection: 'row',

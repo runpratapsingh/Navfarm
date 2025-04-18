@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -8,18 +8,21 @@ import {
   StatusBar,
   Animated,
 } from 'react-native';
-import {PanGestureHandler} from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
 import Header from '../../../components/HeaderComp';
 import {COLORS} from '../../../theme/theme';
 import {appStorage} from '../../../utils/services/StorageHelper';
-import api from '../../../Apiconfig/ApiconfigWithInterceptor';
 import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
 import {navigate} from '../../../utils/services/NavigationService';
 import LinkedDropdowns from './DataHistory/DataEntryHistory';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import StatusModal from '../../../components/CustumModal';
+import {
+  fetchDataEntryDetails,
+  fetchData,
+} from '../../../services/ApiServices/DataEntryAPiserviceForOffline';
+import {checkNetworkStatus} from '../../../services/NetworkServices/Network';
 
 const mainTabs = ['Data Entry', 'Data Entry History'];
 
@@ -34,54 +37,87 @@ const DataEntryScreen = () => {
   const [responseMessage, setResponseMessage] = useState('');
   const [modalType, setModalType] = useState('error');
 
+  const preFetchBatchDetails = async (batchData, baseParams) => {
+    try {
+      for (const batchGroup of batchData) {
+        for (const batch of batchGroup.batches) {
+          const params = {
+            ...baseParams,
+            batch_id: batch.batch_id,
+          };
+          await fetchDataEntryDetails(
+            API_ENDPOINTS.DataEntryDetails,
+            params,
+            batch.batch_id,
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error pre-fetching batch details:', error.message);
+    }
+  };
+
   const getDashboardData = async () => {
     try {
       setLoading(true);
       const userDataString = await appStorage.getUserData();
       const commonDetails = await appStorage.getCommonDetails();
       const selectedData = await appStorage.getSelectedCategory();
-      console.log('selectedData', selectedData);
 
       if (!selectedData) {
-        console.error('No Selected data found in Found');
+        setResponseMessage('No selected data found');
+        setModalType('error');
+        setVisible(true);
         return;
       }
 
       if (!userDataString) {
-        console.error('No user data found in Found');
+        setResponseMessage('No user data found');
+        setModalType('error');
+        setVisible(true);
         return;
       }
 
       const userData = userDataString;
       const commonDetailsData = commonDetails;
-      console.log('userData', userData);
-      console.log('commonDetailsData', commonDetailsData);
 
       if (!userData.companY_ID || !commonDetailsData.naturE_ID) {
-        console.error('Company ID and natureId is missing from user data');
+        setResponseMessage('Company ID or natureId is missing');
+        setModalType('error');
+        setVisible(true);
         return;
       }
 
-      const response = await api.get(API_ENDPOINTS.DataEntryList, {
-        params: {
-          Company_Id: userData.companY_ID,
-          nature_id: selectedData.value,
-          Location_Id: commonDetailsData.locatioN_ID,
-        },
-      });
+      const params = {
+        Company_Id: userData.companY_ID,
+        nature_id: selectedData.value,
+        Location_Id: commonDetailsData.locatioN_ID,
+      };
 
-      console.log('response1111', response.data);
-      if (response.data.status == 'success') {
-        setBatchData(response.data.data.summarry);
+      const data = await fetchData(API_ENDPOINTS.DataEntryList, params);
+
+      if (data.status === 'success') {
+        checkNetworkStatus(async isConnected => {
+          if (isConnected) {
+            await preFetchBatchDetails(data.data.summarry, params);
+          }
+        });
+        setBatchData(data.data.summarry);
       } else {
-        setResponseMessage(response.data?.message || 'Something went wrong');
-        setVisible(true);
+        setResponseMessage(data?.message || 'Something went wrong');
         setModalType('error');
+        setVisible(true);
         setBatchData([]);
       }
     } catch (error) {
-      console.error('API Error:', error);
-      throw error;
+      console.error('Error fetching data entry list:', error.message);
+      setResponseMessage(
+        error.message === 'No cached data available'
+          ? 'No data available offline. Please connect to the internet.'
+          : 'Failed to load data. Showing cached data if available.',
+      );
+      setModalType('warning');
+      setVisible(true);
     } finally {
       setLoading(false);
     }
@@ -153,15 +189,11 @@ const DataEntryScreen = () => {
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: '#2E313F'}}>
       <Animated.View style={styles.container}>
-        {/* Status Bar */}
         <StatusBar barStyle="light-content" backgroundColor="#2E313F" />
-
-        {/* Header Component */}
         <Header
           title="Data Entry Summary"
           onFilterPress={() => navigation.openDrawer()}
         />
-        {/* Main Tabs */}
         <View style={styles.tabsContainer}>
           {mainTabs.map(tab => (
             <TouchableOpacity
@@ -183,6 +215,13 @@ const DataEntryScreen = () => {
               data={batchData}
               renderItem={renderBatchItem}
               keyExtractor={item => item.lob_id.toString()}
+              ListEmptyComponent={
+                loading ? (
+                  <Text style={styles.loadingText}>Loading...</Text>
+                ) : (
+                  <Text style={styles.emptyText}>No data available</Text>
+                )
+              }
             />
           )}
           {activeMainTab === 'Data Entry History' && <LinkedDropdowns />}
@@ -255,6 +294,18 @@ const styles = StyleSheet.create({
   rowText: {flex: 1, textAlign: 'center'},
   flatListContainer: {
     flexGrow: 1,
+  },
+  loadingText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#333',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#333',
   },
 });
 

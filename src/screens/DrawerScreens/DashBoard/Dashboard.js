@@ -18,9 +18,9 @@ import Animated, {
   withDelay,
 } from 'react-native-reanimated';
 import {appStorage} from '../../../utils/services/StorageHelper';
-import api from '../../../Apiconfig/ApiconfigWithInterceptor';
 import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
 import {CHART_COLORS} from '../../../utils/JSON/ChartColors';
+import {fetchData} from '../../../services/ApiServices/Apiservice';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -33,7 +33,6 @@ const MetricCard = React.memo(({item, index, delay}) => {
   const translateY = useSharedValue(20);
 
   useEffect(() => {
-    // Stagger animation based on index
     opacity.value = withDelay(
       delay + index * 100,
       withTiming(1, {duration: 400}),
@@ -102,7 +101,6 @@ const AnimatedPieChart = React.memo(({title, data, delay}) => {
 
   const [isLoaded, setIsLoaded] = React.useState(false);
 
-  // Simulate chart loading
   useEffect(() => {
     const timer = setTimeout(() => setIsLoaded(true), delay);
     return () => clearTimeout(timer);
@@ -124,7 +122,7 @@ const AnimatedPieChart = React.memo(({title, data, delay}) => {
             absolute
             hasLegend={false}
           />
-          <Legend data={data} /> {/* Render the legend below the chart */}
+          <Legend data={data} />
         </Animated.View>
       ) : (
         <View style={styles.loaderContainer}>
@@ -153,50 +151,46 @@ const DashboardScreen = () => {
       const userDataString = await appStorage.getUserData();
       const commonDetails = await appStorage.getCommonDetails();
       const selectedData = await appStorage.getSelectedCategory();
-      console.log('selectedData', selectedData);
 
       if (!selectedData) {
-        console.error('No Selected data found in Found');
+        console.error('No selected data found');
         return;
       }
 
       if (!userDataString) {
-        console.error('No user data found in Found');
+        console.error('No user data found');
         return;
       }
 
       const userData = userDataString;
       const commonDetailsData = commonDetails;
-      console.log('userData', userData);
-      console.log('commonDetailsData', commonDetailsData);
 
       if (!userData.companY_ID || !commonDetailsData.naturE_ID) {
-        console.error('Company ID and natureId is missing from user data');
+        console.error('Company ID or natureId is missing');
         return;
       }
 
-      const response = await api.get(API_ENDPOINTS.DASHBOARD_DATA, {
-        params: {
-          company_id: userData.companY_ID,
-          Nature_Id: selectedData.value,
-          user_id: userData.useR_ID,
-        },
-      });
+      const params = {
+        company_id: userData.companY_ID,
+        Nature_Id: selectedData.value,
+        user_id: userData.useR_ID,
+      };
 
-      console.log('response1111', response.data);
-      if (response.data.status === 'success') {
-        const apiData = response.data.data[0].data[0];
+      const data = await fetchData(API_ENDPOINTS.DASHBOARD_DATA, params);
+      console.log('jhdajkhdjhdk', data.status, data.status == 'success');
+
+      if (data.status == 'success') {
+        const apiData = data.data[0].data[0];
         const newMetrics = apiData.labels.map((label, index) => ({
           label,
           value: apiData.values[index],
         }));
         setMetrics(newMetrics);
       } else {
-        // Handle error
+        console.error('API response status not success');
       }
     } catch (error) {
-      console.error('API Error:', error);
-      throw error;
+      console.error('Error fetching dashboard data:', error.message);
     } finally {
       setLoading(false);
     }
@@ -208,39 +202,40 @@ const DashboardScreen = () => {
       const userDataString = await appStorage.getUserData();
       const commonDetails = await appStorage.getCommonDetails();
       const selectedData = await appStorage.getSelectedCategory();
-      console.log('selectedData', selectedData);
 
       if (!selectedData) {
-        console.error('No Selected data found in Found');
+        console.error('No selected data found');
         return;
       }
 
       if (!userDataString) {
-        console.error('No user data found in Found');
+        console.error('No user data found');
         return;
       }
 
       const userData = userDataString;
       const commonDetailsData = commonDetails;
-      console.log('userData', userData);
-      console.log('commonDetailsData', commonDetailsData);
 
       if (!userData.companY_ID || !commonDetailsData.naturE_ID) {
-        console.error('Company ID and natureId is missing from user data');
+        console.error('Company ID or natureId is missing');
         return;
       }
 
-      const response = await api.get(API_ENDPOINTS.LocationRunningCostGraph, {
-        params: {
-          company_id: userData.companY_ID,
-          Nature_Id: selectedData.value,
-          user_id: userData.useR_ID,
-        },
-      });
+      const params = {
+        company_id: userData.companY_ID,
+        Nature_Id: selectedData.value,
+        user_id: userData.useR_ID,
+      };
 
-      console.log('Running graph data', response.data);
-      if (response.data.status === 'success') {
-        const runningData = JSON.parse(response.data.data.result);
+      const data = await fetchData(
+        API_ENDPOINTS.LocationRunningCostGraph,
+        params,
+      );
+
+      console.log('jhdajkhdjhdk11111', data, data.status == 'success');
+
+      if (data.status === 'success') {
+        const runningData = JSON.parse(data.data.result);
         const newRunningCostData = runningData.map((item, index) => ({
           name: item.LOCATION_NAME,
           population: item.RUNNING_COST,
@@ -250,11 +245,10 @@ const DashboardScreen = () => {
         }));
         setRunningCostData(newRunningCostData);
       } else {
-        // Handle error
+        console.error('API response status not success');
       }
     } catch (error) {
-      console.error('API Error:', error);
-      throw error;
+      console.error('Error fetching running cost data:', error.message);
     } finally {
       setLoading(false);
     }
@@ -266,39 +260,36 @@ const DashboardScreen = () => {
       const userDataString = await appStorage.getUserData();
       const commonDetails = await appStorage.getCommonDetails();
       const selectedData = await appStorage.getSelectedCategory();
-      console.log('selectedData', selectedData);
 
       if (!selectedData) {
-        console.error('No Selected data found in Found');
+        console.error('No selected data found');
         return;
       }
 
       if (!userDataString) {
-        console.error('No user data found in Found');
+        console.error('No user data found');
         return;
       }
 
       const userData = userDataString;
       const commonDetailsData = commonDetails;
-      console.log('userData', userData);
-      console.log('commonDetailsData', commonDetailsData);
 
       if (!userData.companY_ID || !commonDetailsData.naturE_ID) {
-        console.error('Company ID and natureId is missing from user data');
+        console.error('Company ID or natureId is missing');
         return;
       }
 
-      const response = await api.get(API_ENDPOINTS.LocationOutputGraph, {
-        params: {
-          company_id: userData.companY_ID,
-          Nature_Id: selectedData.value,
-          user_id: userData.useR_ID,
-        },
-      });
+      const params = {
+        company_id: userData.companY_ID,
+        Nature_Id: selectedData.value,
+        user_id: userData.useR_ID,
+      };
 
-      console.log('Output graph data', response.data);
-      if (response.data.status === 'success') {
-        const outputData = JSON.parse(response.data.data.result);
+      const data = await fetchData(API_ENDPOINTS.LocationOutputGraph, params);
+      console.log('jhdajkhdjhdk22222', data, data.status == 'success');
+
+      if (data.status === 'success') {
+        const outputData = JSON.parse(data.data.result);
         const newOutputData = outputData.map((item, index) => ({
           name: item.LOCATION_NAME,
           population: item.OUT_PUT,
@@ -307,19 +298,18 @@ const DashboardScreen = () => {
           legendFontSize: 12,
         }));
         setOutputData(newOutputData);
-        setDataLoaded(true); // Set dataLoaded to true after data is fetched
+        setDataLoaded(true);
       } else {
-        // Handle error
+        console.error('API response status not success');
       }
     } catch (error) {
-      console.error('API Error:', error);
-      throw error;
+      console.error('Error fetching output data:', error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchData = async () => {
+  const fetchAllData = async () => {
     try {
       await Promise.all([
         getDashboardData(),
@@ -327,12 +317,12 @@ const DashboardScreen = () => {
         getDashboardLocationOutputData(),
       ]);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching all data:', error);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchAllData();
   }, []);
 
   return (
@@ -342,6 +332,11 @@ const DashboardScreen = () => {
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
+        {loading && (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#16a085" />
+          </View>
+        )}
         <View style={styles.cardsContainer}>
           {metrics.map((item, index) => (
             <MetricCard
@@ -356,13 +351,13 @@ const DashboardScreen = () => {
         <AnimatedPieChart
           title="Location wise Running Cost"
           data={runningCostData}
-          delay={dataLoaded ? metrics.length * 100 + 200 : 1000} // After cards
+          delay={dataLoaded ? metrics.length * 100 + 200 : 1000}
         />
 
         <AnimatedPieChart
           title="Location wise Output"
           data={outputData}
-          delay={dataLoaded ? metrics.length * 100 + 400 : 1000} // Slightly after first chart
+          delay={dataLoaded ? metrics.length * 100 + 400 : 1000}
         />
       </ScrollView>
     </>

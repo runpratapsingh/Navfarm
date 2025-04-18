@@ -15,15 +15,14 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import {requireImage} from '../../utils/JSON/Images';
-import api from '../../Apiconfig/ApiconfigWithInterceptor';
 
 import {API_ENDPOINTS} from '../../Apiconfig/Apiconfig';
 import {navigate} from '../../utils/services/NavigationService';
 import {appStorage} from '../../utils/services/StorageHelper';
-import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import ConfirmLogoutAndExitModal from '../../components/ExitAndLogoutModalComp';
 import {useNavigation} from '@react-navigation/native';
-import Header from '../../components/HeaderComp';
+import {fetchData} from '../../services/ApiServices/Apiservice';
 
 const initialData = [
   {key: 'poultry', label: 'Poultry', image: requireImage.poultry},
@@ -137,20 +136,22 @@ const CategorySelection = () => {
         return;
       }
 
-      const response = await api.get(API_ENDPOINTS.Dashboard_NOB, {
-        params: {
-          Company_Id: userData.companY_ID,
-          nature_id: commonDetailsData.naturE_ID,
-        },
-      });
+      // const response = await api.get(API_ENDPOINTS.Dashboard_NOB, {
+      //   params: {
+      //     Company_Id: userData.companY_ID,
+      //     nature_id: commonDetailsData.naturE_ID,
+      //   },
+      // });
 
-      const nobData = response.data.data.nob;
+      const params = {
+        Company_Id: userData.companY_ID,
+        nature_id: commonDetailsData.naturE_ID,
+      };
+
+      const response = await fetchData(API_ENDPOINTS.Dashboard_NOB, params);
+
+      const nobData = response.data.nob;
       const filteredNobData = nobData.filter(item => item.selected);
-      console.log(
-        'Dashboard Data111:-----',
-        response.data.data,
-        filteredNobData,
-      );
 
       // Map filteredNobData to the structure of initialData
       const updatedData = filteredNobData.map(item => {
