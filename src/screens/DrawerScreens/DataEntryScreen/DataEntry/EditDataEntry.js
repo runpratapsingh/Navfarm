@@ -25,7 +25,10 @@ import {
   postDataEntry,
   syncOfflineData,
 } from '../../../../services/ApiServices/Apiservice';
-import {subscribeToNetworkChanges} from '../../../../services/NetworkServices/Network';
+import {
+  checkNetworkStatus,
+  subscribeToNetworkChanges,
+} from '../../../../services/NetworkServices/Network';
 import {
   cacheApiResponseForDataEntry,
   getCachedResponseForDataEntry,
@@ -33,6 +36,7 @@ import {
   getUnsyncedDataEntriesForDataEntry,
   markAsSyncedForDataEntry,
 } from '../../../../services/OfflineServices/DataentryOfflineDB';
+import api from '../../../../Apiconfig/ApiconfigWithInterceptor';
 
 const EditDataEntry = ({route}) => {
   const {batch_id} = route.params;
@@ -70,7 +74,20 @@ const EditDataEntry = ({route}) => {
   const [modalType, setModalType] = useState('error');
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({});
-  const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToNetworkChanges(isConnected => {
+      if (isConnected) {
+        syncOfflineDataEntries();
+      }
+    });
+
+    getDataEntryDetails();
+
+    return () => {
+      unsubscribe();
+    };
+  }, [batch_id]);
 
   const formatDateForCalendar = dateStr => {
     const [day, month, year] = dateStr.split('-');
@@ -269,15 +286,30 @@ const EditDataEntry = ({route}) => {
         BATCH_NO: formState.batch_No,
       });
 
+      const checkNetworkStatusAsync = () =>
+        new Promise(resolve => {
+          checkNetworkStatus(resolve);
+        });
+
+      const isConnected = await checkNetworkStatusAsync();
+
       let response;
-      if (isOnline) {
+
+      if (isConnected) {
         response = await postDataEntry(updatedData, batch_id);
       } else {
+        console.log('API_ENDPOINTS:', API_ENDPOINTS);
+        console.log(
+          'API_ENDPOINTS.DataEntrySubmit:',
+          API_ENDPOINTS.DataEntrySubmit,
+        );
+
         // Save offline if network is unavailable
         response = await new Promise(resolve => {
           saveOfflineDataEntryForDataEntry(
             updatedData,
-            API_ENDPOINTS.DataEntrySubmit,
+            API_ENDPOINTS.SaveAndPostDataEntry,
+
             batch_id,
             insertId => {
               if (insertId) {
@@ -315,7 +347,7 @@ const EditDataEntry = ({route}) => {
         await new Promise(resolve => {
           saveOfflineDataEntryForDataEntry(
             updatedData,
-            API_ENDPOINTS.DataEntrySubmit,
+            API_ENDPOINTS.SaveAndPostDataEntry,
             batch_id,
             insertId => {
               resolve(insertId);
@@ -411,7 +443,6 @@ const EditDataEntry = ({route}) => {
 
   const getDataEntryDetails = async () => {
     try {
-      setLoading(true);
       const userDataString = await appStorage.getUserData();
       const commonDetails = await appStorage.getCommonDetails();
 
@@ -438,40 +469,50 @@ const EditDataEntry = ({route}) => {
       };
 
       let response;
-      if (isOnline) {
-        response = await fetchData(
-          API_ENDPOINTS.DataEntryDetails,
-          params,
+
+      const checkNetworkStatusAsync = () =>
+        new Promise(resolve => {
+          checkNetworkStatus(resolve);
+        });
+
+      const isConnected = await checkNetworkStatusAsync();
+      console.log('kahsdjasdhjahdakjs', isConnected);
+      if (isConnected) {
+        response = await api.get(API_ENDPOINTS.DataEntryDetails, {
+          params: params,
+        });
+
+        console.log(
+          'response---------------',
+          response.data,
           batch_id,
+          response.data?.data?.line,
         );
-        if (response.status === 'success') {
-          // Cache the response
-          await new Promise(resolve => {
-            cacheApiResponseForDataEntry(
+        response = response.data;
+      } else {
+        try {
+          // Try to fetch cached data
+          response = await new Promise(resolve => {
+            getCachedResponseForDataEntry(
               API_ENDPOINTS.DataEntryDetails,
               batch_id,
-              response,
               resolve,
             );
           });
-        } else {
-          setResponseMessage(
-            response.message || 'Failed to load batch details',
-          );
-          setModalType('error');
-          setVisible(true);
-        }
-      } else {
-        // Try to fetch cached data
-        response = await new Promise(resolve => {
-          getCachedResponseForDataEntry(
-            API_ENDPOINTS.DataEntryDetails,
-            batch_id,
-            resolve,
-          );
-        });
-        if (!response) {
-          throw new Error('No cached data available');
+
+          console.log('status', response);
+
+          if (!response || response.status !== 'success') {
+            console.log('status111', response);
+            setResponseMessage(
+              response.message || 'Failed to load data from cache.rr',
+            );
+            setModalType('error');
+            setVisible(true);
+            return; // Don't proceed further
+          }
+        } catch (error) {
+          console.log('error ------------------->', error);
         }
       }
 
@@ -533,98 +574,8 @@ const EditDataEntry = ({route}) => {
       }
     } catch (error) {
       console.error('Error fetching batch details:', error.message);
-      // Try to fetch cached data
-      try {
-        const cachedResponse = await new Promise(resolve => {
-          getCachedResponseForDataEntry(
-            API_ENDPOINTS.DataEntryDetails,
-            batch_id,
-            resolve,
-          );
-        });
-        if (cachedResponse.status === 'success') {
-          console.log('Using cached data:', cachedResponse);
-          setResponseMessage('Loaded cached data due to network issue');
-          setModalType('warning');
-          setVisible(true);
-
-          const header = cachedResponse.data?.header?.[0] || {};
-          const line = cachedResponse.data?.line || [];
-          setLineData(line);
-          setFormState(prevState => ({
-            ...prevState,
-            natureOfBusiness: header.naturE_OF_BUSINESS || '',
-            lineOfBusiness: header.linE_OF_BUSINESS || '',
-            remainingQty: header.remaininG_QTY?.toString() || '',
-            breedName: header.breeD_NAME || '',
-            templateName: header.templatE_NAME || '',
-            postingDate: header.p_DATE
-              ? formatDateForCalendar(header.p_DATE)
-              : '',
-            subLocationName: header.locatioN_NAME || '',
-            ageDays: header.agE_DAYS?.toString() || '',
-            ageWeek: header.agE_WEEK?.toString() || '',
-            openingQuantity: header.openinG_QTY?.toString() || '',
-            startDate: header.s_DATE || '',
-            runningCost: header.runninG_COST?.toString() || '',
-            batch_No: header.batcH_NO || '',
-            nob_id: header.noB_ID || 0,
-            lob_id: header.loB_ID || 0,
-            template_id: header.templatE_ID || 0,
-            location: header.locatioN_ID || 0,
-            batch_id: header.batcH_ID?.toString(),
-            CREATED_BY: header.createD_BY?.toString(),
-            Remark: header.remark || '',
-            DataEntryId: header.dataentrY_ID || 0,
-            postingStatus: header.status || '',
-          }));
-
-          const grouped = line.reduce((acc, item) => {
-            const type = item.parameteR_TYPE;
-            if (!acc[type]) {
-              acc[type] = [];
-            }
-            acc[type].push(item);
-            return acc;
-          }, {});
-
-          setGroupedData(grouped);
-          setExpandedGroups(
-            Object.keys(grouped).reduce((acc, key) => {
-              acc[key] = false;
-              return acc;
-            }, {}),
-          );
-        } else {
-          setResponseMessage(
-            cachedResponse.message ||
-              'Failed to load data. No cached data available.',
-          );
-          setModalType('error');
-          setVisible(true);
-        }
-      } catch (cacheError) {
-        console.error('Error fetching cached data:', cacheError.message);
-        setResponseMessage('Failed to load data. No cached data available.');
-        setModalType('error');
-        setVisible(true);
-      }
-    } finally {
-      setLoading(false);
     }
   };
-
-  useEffect(() => {
-    getDataEntryDetails();
-    const unsubscribe = subscribeToNetworkChanges(isConnected => {
-      setIsOnline(isConnected);
-      if (isConnected) {
-        syncOfflineData(); // Existing sync for other data
-        syncOfflineDataEntries(); // Sync data entries
-      }
-    });
-    return () => unsubscribe();
-  }, [batch_id, isOnline]); // Add dependencies if needed
 
   const toggleGroup = group => {
     setExpandedGroups(prevState => ({

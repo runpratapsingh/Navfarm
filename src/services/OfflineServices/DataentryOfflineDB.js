@@ -190,10 +190,12 @@ export const getCachedResponseForDataEntry = async (
         reject(new Error('Database is not initialized'));
         return;
       }
+      console.log('paramas dats ', endpoint, batch_id);
+
       db.transaction(
         tx => {
           tx.executeSql(
-            'SELECT data FROM ApiCache WHERE endpoint = ? OR batch_id = ?',
+            'SELECT data FROM ApiCache WHERE endpoint = ? AND batch_id = ?',
             [endpoint, batchIdStr],
             (_, {rows}) => {
               const data =
@@ -202,7 +204,7 @@ export const getCachedResponseForDataEntry = async (
                 `Fetched cached data for endpoint: ${endpoint}, batch_id: ${batchIdStr}`,
               );
 
-              console.log('kajshjashfjkashfkjsa', data);
+              console.log('Row data-------------->', data);
 
               callback(data);
               resolve();
@@ -237,6 +239,8 @@ export const saveOfflineDataEntryForDataEntry = async (
 ) => {
   try {
     await ensureDbInitialized();
+
+    console.log('llllllllllllllllllllllllll------->', endpoint, batch_id);
 
     if (!endpoint || typeof endpoint !== 'string') {
       throw new Error('Invalid endpoint');
@@ -285,6 +289,53 @@ export const saveOfflineDataEntryForDataEntry = async (
   } catch (error) {
     console.error('saveOfflineDataEntryForDataEntry failed:', error.message);
     callback?.(null, error);
+  }
+};
+
+export const getAllCachedResponses = async callback => {
+  try {
+    await ensureDbInitialized();
+
+    await new Promise((resolve, reject) => {
+      if (!db || typeof db.transaction !== 'function') {
+        reject(new Error('Database is not initialized'));
+        return;
+      }
+
+      db.transaction(
+        tx => {
+          tx.executeSql(
+            'SELECT * FROM ApiCache',
+            [],
+            (_, {rows}) => {
+              const results = [];
+              for (let i = 0; i < rows.length; i++) {
+                const item = rows.item(i);
+                results.push({
+                  endpoint: item.endpoint,
+                  batch_id: item.batch_id,
+                  data: JSON.parse(item.data),
+                });
+              }
+              console.log('All cached responses:', results);
+              callback(results);
+              resolve();
+            },
+            (_, error) => {
+              console.error('Error fetching all cached responses:', error);
+              reject(error || new Error('Unknown error during fetch'));
+            },
+          );
+        },
+        error => {
+          console.error('Transaction error during fetch all:', error);
+          reject(error || new Error('Unknown transaction error'));
+        },
+      );
+    });
+  } catch (error) {
+    console.error('getAllCachedResponses failed:', error.message);
+    callback([]);
   }
 };
 

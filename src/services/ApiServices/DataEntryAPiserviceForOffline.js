@@ -27,7 +27,9 @@ export const fetchData = async (endpoint, params = {}) => {
           if (data) {
             resolve(data);
           } else {
-            reject(new Error('No cached data available'));
+            reject(
+              new Error('No cached data available-0000000000000000000000---'),
+            );
           }
         });
       }
@@ -61,7 +63,7 @@ export const fetchDataEntryDetails = async (
           if (data) {
             resolve(data);
           } else {
-            reject(new Error('No cached data available'));
+            reject(new Error('No cached data available11111111111111---'));
           }
         });
       }
