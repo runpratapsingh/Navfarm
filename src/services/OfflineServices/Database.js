@@ -1,4 +1,5 @@
 import SQLite from 'react-native-sqlite-storage';
+import {initDatabaseForDataEntry} from './DataentryOfflineDB';
 
 const db = SQLite.openDatabase(
   {name: 'NavFarm.db', location: 'default'},
@@ -27,6 +28,27 @@ export const initDatabase = () => {
         createdAt TEXT
       )`,
       [],
+    );
+  });
+};
+
+// Function to open a database and return the database object
+const openDatabase = dbName => {
+  return new Promise((resolve, reject) => {
+    SQLite.openDatabase(
+      {name: dbName, location: 'default'},
+      db => resolve(db),
+      error => reject(new Error(`Error opening ${dbName}: ${error.message}`)),
+    );
+  });
+};
+
+// Function to close a database
+const closeDatabase = db => {
+  return new Promise((resolve, reject) => {
+    db.close(
+      () => resolve(),
+      error => reject(new Error(`Error closing database: ${error.message}`)),
     );
   });
 };
@@ -97,143 +119,67 @@ export const markAsSynced = id => {
   });
 };
 
-// Clear both NavFarm.db and NavFarmDataEntry.db
+const initializeDatabases = async () => {
+  try {
+    await initDatabase();
+    await initDatabaseForDataEntry();
+  } catch (error) {
+    console.error('Error initializing databases:', error);
+  }
+};
+
+// Function to delete all data from a table in a database
+const deleteAllDataFromTable = (db, tableName) => {
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      tx => {
+        tx.executeSql(
+          `DELETE FROM ${tableName}`,
+          [],
+          () => resolve(),
+          (_, error) =>
+            reject(
+              new Error(
+                `Error deleting data from ${tableName}: ${error.message}`,
+              ),
+            ),
+        );
+      },
+      error => reject(new Error(`Transaction error: ${error.message}`)),
+    );
+  });
+};
+
+// Clear all data from both NavFarm.db and NavFarmDataEntry.db
 export const clearDatabases = async () => {
   let navFarmDb = null;
   let navFarmDataEntryDb = null;
 
   try {
     console.log('Opening NavFarm.db to clear data...');
-    navFarmDb = await SQLite.openDatabase({
-      name: 'NavFarm.db',
-      location: 'default',
-    });
+    navFarmDb = await openDatabase('NavFarm.db');
 
-    // Clear NavFarm.db
-    await new Promise((resolve, reject) => {
-      navFarmDb.transaction(
-        tx => {
-          tx.executeSql(
-            'DROP TABLE IF EXISTS ApiCache',
-            [],
-            () => {
-              console.log('Dropped ApiCache table in NavFarm.db');
-            },
-            (_, error) => {
-              console.error(
-                'Error dropping ApiCache table in NavFarm.db:',
-                error,
-              );
-              reject(error);
-            },
-          );
-        },
-        error => {
-          console.error('Transaction error in NavFarm.db:', error);
-          reject(error);
-        },
-        () => {
-          console.log('NavFarm.db transaction completed.');
-          resolve();
-        }, // Success callback for transaction completion
-      );
-    });
+    // Clear data from NavFarm.db
+    await deleteAllDataFromTable(navFarmDb, 'ApiCache');
+    console.log('Deleted all data from ApiCache table in NavFarm.db');
 
     console.log('Opening NavFarmDataEntry.db to clear data...');
-    navFarmDataEntryDb = await SQLite.openDatabase({
-      name: 'NavFarmDataEntry.db',
-      location: 'default',
-    });
+    navFarmDataEntryDb = await openDatabase('NavFarmDataEntry.db');
 
-    // Clear NavFarmDataEntry.db
-    await new Promise((resolve, reject) => {
-      navFarmDataEntryDb.transaction(
-        tx => {
-          // Execute DROP TABLE statements sequentially
-          tx.executeSql(
-            'DROP TABLE IF EXISTS ApiCache',
-            [],
-            () => {
-              console.log('Dropped ApiCache table in NavFarmDataEntry.db');
-            },
-            (_, error) => {
-              console.error(
-                'Error dropping ApiCache table in NavFarmDataEntry.db:',
-                error,
-              );
-              reject(error);
-            },
-          );
-          tx.executeSql(
-            'DROP TABLE IF EXISTS OfflineDataEntries',
-            [],
-            () => {
-              console.log(
-                'Dropped OfflineDataEntries table in NavFarmDataEntry.db',
-              );
-            },
-            (_, error) => {
-              console.error(
-                'Error dropping OfflineDataEntries table in NavFarmDataEntry.db:',
-                error,
-              );
-              reject(error);
-            },
-          );
-        },
-        error => {
-          console.error('Transaction error in NavFarmDataEntry.db:', error);
-          reject(error);
-        },
-        () => {
-          console.log('NavFarmDataEntry.db transaction completed.');
-          resolve();
-        }, // Success callback for transaction completion
-      );
-    });
+    // Clear data from NavFarmDataEntry.db
+    await deleteAllDataFromTable(navFarmDataEntryDb, 'ApiCache');
+    console.log('Deleted all data from ApiCache table in NavFarmDataEntry.db');
+
+    await deleteAllDataFromTable(navFarmDataEntryDb, 'OfflineDataEntries');
+    console.log(
+      'Deleted all data from OfflineDataEntries table in NavFarmDataEntry.db',
+    );
 
     console.log('All database data cleared successfully.');
   } catch (error) {
     console.error('Error clearing databases:', error.message);
     // Continue logout process even if clearing fails
   } finally {
-    // Close database connections with error handling
-    if (navFarmDb) {
-      try {
-        await new Promise((resolve, reject) => {
-          navFarmDb.close(
-            () => {
-              console.log('NavFarm.db closed.');
-              resolve();
-            },
-            error => {
-              console.error('Error closing NavFarm.db:', error);
-              reject(error);
-            },
-          );
-        });
-      } catch (closeError) {
-        console.error('Error closing NavFarm.db:', closeError.message);
-      }
-    }
-
-    if (navFarmDataEntryDb) {
-      try {
-        await new Promise((resolve, reject) => {
-          navFarmDataEntryDb.close(
-            () => {
-              console.log('NavFarmDataEntry.db closed.');
-              resolve();
-            },
-            error => {
-              console.error('Error closing NavFarmDataEntry.db:', error);
-              reject(error);
-            },
-          );
-        });
-      } catch (closeError) {
-        console.error('Error closing NavFarmDataEntry.db:', closeError.message);
-      }
-    }
+    initializeDatabases();
   }
 };

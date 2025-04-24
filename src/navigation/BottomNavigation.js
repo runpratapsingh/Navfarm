@@ -8,7 +8,7 @@ import {
   StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -133,24 +133,26 @@ const BottomNavigation = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar
-        backgroundColor={COLORS.primaryColor}
-        barStyle={'light-content'}
-      />
-      {renderContent()}
-      <View style={[styles.bottomNavigation]}>
-        {tabs.map((tab, index) => (
-          <TabItem
-            key={tab.name}
-            tab={tab}
-            isActive={activeTab === tab.name}
-            onPress={() => handleTabPress(tab.name, index)}
-          />
-        ))}
-        <Animated.View style={[styles.underline, animatedUnderlineStyle]} />
+    <SafeAreaView style={{flex: 1, backgroundColor: '#2E313F'}}>
+      <View style={styles.container}>
+        <StatusBar
+          backgroundColor={COLORS.primaryColor}
+          barStyle={'light-content'}
+        />
+        {renderContent()}
+        <View style={[styles.bottomNavigation]}>
+          {tabs.map((tab, index) => (
+            <TabItem
+              key={tab.name}
+              tab={tab}
+              isActive={activeTab === tab.name}
+              onPress={() => handleTabPress(tab.name, index)}
+            />
+          ))}
+          <Animated.View style={[styles.underline, animatedUnderlineStyle]} />
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

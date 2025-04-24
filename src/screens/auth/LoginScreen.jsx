@@ -44,6 +44,7 @@ const SignInScreen = () => {
     try {
       await initDatabase();
       await initDatabaseForDataEntry();
+      // navigation.replace('CategorySelection');
     } catch (error) {
       console.error('Error initializing databases:', error);
     }
@@ -112,7 +113,6 @@ const SignInScreen = () => {
           if (storedToken) {
             await fetchCommonDetails(userData.companY_ID, userData.useR_ID);
           }
-          await initializeDatabases();
         }
       } else {
         setErrorMessage(response.data?.message || 'Something went wrong');
@@ -152,7 +152,10 @@ const SignInScreen = () => {
         const commonDetails = response.data.data.common_details[0];
         await appStorage.setCommonDetails(commonDetails);
         console.log('Common details stored successfully:', commonDetails);
-        navigation.replace('CategorySelection');
+        if (commonDetails) {
+          // await initializeDatabases();
+          navigation.replace('CategorySelection');
+        }
       }
     } catch (error) {
       console.error('Error fetching common details:', error);

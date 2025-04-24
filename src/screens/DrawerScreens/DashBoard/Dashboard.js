@@ -117,10 +117,11 @@ const AnimatedPieChart = React.memo(({title, data, delay}) => {
             height={250}
             chartConfig={chartConfig}
             accessor="population"
-            backgroundColor="transparent"
+            backgroundColor="#fff"
             paddingLeft="15"
             absolute
             hasLegend={false}
+            center={[75, 0, 0, 0]}
           />
           <Legend data={data} />
         </Animated.View>

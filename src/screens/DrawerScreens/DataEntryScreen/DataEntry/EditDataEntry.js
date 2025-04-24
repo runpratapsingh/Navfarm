@@ -301,7 +301,7 @@ const EditDataEntry = ({route}) => {
         console.log('API_ENDPOINTS:', API_ENDPOINTS);
         console.log(
           'API_ENDPOINTS.DataEntrySubmit:',
-          API_ENDPOINTS.DataEntrySubmit,
+          API_ENDPOINTS.SaveAndPostDataEntry,
         );
 
         // Save offline if network is unavailable
@@ -567,6 +567,13 @@ const EditDataEntry = ({route}) => {
             return acc;
           }, {}),
         );
+      } else if (
+        response.status === 'error' &&
+        response.message == 'Cannot find table 0.'
+      ) {
+        setResponseMessage('All Task is completed.');
+        setModalType('success');
+        setVisible(true);
       } else {
         setResponseMessage(response.message || 'Failed to load batch details');
         setModalType('error');
