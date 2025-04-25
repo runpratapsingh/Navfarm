@@ -419,14 +419,16 @@ const EditDataEntry = ({route}) => {
 
   const updateGroupedData = (type, index, key, value) => {
     const updatedGrouped = {...groupedData};
+    console.log('kjhkjkkhhjjjkjkjkjkkj', updatedGrouped);
 
     const parsedValue =
       key === 'uniT_COST' || key === 'actuaL_VALUE'
-        ? parseFloat(value) || 0
-        : value;
+        ? value.toString() || ''
+        : value.toString();
 
     // Update groupedData
     const updatedItems = [...updatedGrouped[type]];
+    console.log('kjhkjkkhhjjjkjkjkjkkj1111', updatedItems);
     updatedItems[index] = {
       ...updatedItems[index],
       [key]: parsedValue,
@@ -591,85 +593,103 @@ const EditDataEntry = ({route}) => {
     }));
   };
 
-  const renderLineItem = ({item, index}) => (
-    <View style={styles.section} key={index}>
-      <View style={styles.row}>
-        <View style={styles.textParameterNameContainer}>
-          <Text style={styles.sectionTitle}>{item.parameteR_NAME || ''}</Text>
-        </View>
-        <CustomInput
-          label="Total Units"
-          value={item.actuaL_VALUE?.toString()}
-          // onChangeText={text => updateLineData(index, 'actuaL_VALUE', text)}
-          onChangeText={text =>
-            updateGroupedData(item.parameteR_TYPE, index, 'actuaL_VALUE', text)
-          }
-          containerStyle={styles.inputWrapper1}
-        />
-        <CustomInput
-          label="Cost Per Unit"
-          value={item.uniT_COST?.toString()}
-          // onChangeText={text => updateLineData(index, 'uniT_COST', text)}
-          onChangeText={text =>
-            updateGroupedData(item.parameteR_TYPE, index, 'uniT_COST', text)
-          }
-          editable={item.parameteR_NAME === 'Descriptive' ? false : true}
-          containerStyle={styles.inputWrapper1}
-        />
-        <View style={styles.sectionTitleHeader1}>
-          <TouchableOpacity onPress={() => handleEyePress(item)}>
-            <Icon name="eye" size={20} color="#000" />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.row}>
-        {item.parameteR_TYPE == 'Descriptive' ? (
-          item.parameter_input_type == 'input' ? (
-            <CustomInput
-              label="Descriptive"
-              value={item.parameter_input_value}
-              // onChangeText={text =>
-              //   updateLineData(index, 'parameter_input_value', text)
-              // }
-              onChangeText={text =>
+  const renderLineItem = ({item, index}) => {
+    const decimalRegex = /^\d*\.?\d{0,3}$/;
+    return (
+      <View style={styles.section} key={index}>
+        <View style={styles.row}>
+          <View style={styles.textParameterNameContainer}>
+            <Text style={styles.sectionTitle}>{item.parameteR_NAME || ''}</Text>
+          </View>
+          <CustomInput
+            label="Total Units"
+            value={item.actuaL_VALUE?.toString()}
+            // onChangeText={text => updateLineData(index, 'actuaL_VALUE', text)}
+            onChangeText={text => {
+              if (decimalRegex.test(text)) {
                 updateGroupedData(
                   item.parameteR_TYPE,
                   index,
-                  'parameter_input_value',
+                  'actuaL_VALUE',
                   text,
-                )
+                );
               }
-              placeholder="Enter descriptive value"
-              containerStyle={{width: '100%'}}
-            />
-          ) : item.parameteR_TYPE == 'Descriptive' ? (
-            <CustomDropdown
-              label="Descriptive"
-              selectedValue={item.parameter_input_value}
-              // onValueChange={value => {
-              //   updateLineData(index, 'parameter_input_value', value);
-              // }}
-              onValueChange={text =>
+            }}
+            keyboardType="numeric"
+            containerStyle={styles.inputWrapper1}
+          />
+          <CustomInput
+            label="Cost Per Unit"
+            value={item.uniT_COST?.toString()}
+            // onChangeText={text => updateLineData(index, 'uniT_COST', text)}
+            onChangeText={text => {
+              if (decimalRegex.test(text)) {
                 updateGroupedData(
                   item.parameteR_TYPE,
                   index,
-                  'parameter_input_value',
+                  'uniT_COST',
                   text,
-                )
+                );
               }
-              options={[
-                {id: '', name: 'Select'},
-                ...item.parameter_input_format
-                  .split(',')
-                  .map(opt => ({id: opt.trim(), name: opt.trim()})),
-              ]}
-              containerStyle={styles.inputWrapper}
-            />
-          ) : null
-        ) : null}
+            }}
+            editable={item.parameteR_NAME === 'Descriptive' ? false : true}
+            containerStyle={styles.inputWrapper1}
+          />
+          <View style={styles.sectionTitleHeader1}>
+            <TouchableOpacity onPress={() => handleEyePress(item)}>
+              <Icon name="eye" size={20} color="#000" />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.row}>
+          {item.parameteR_TYPE == 'Descriptive' ? (
+            item.parameter_input_type == 'input' ? (
+              <CustomInput
+                label="Descriptive"
+                value={item.parameter_input_value}
+                // onChangeText={text =>
+                //   updateLineData(index, 'parameter_input_value', text)
+                // }
+                onChangeText={text =>
+                  updateGroupedData(
+                    item.parameteR_TYPE,
+                    index,
+                    'parameter_input_value',
+                    text,
+                  )
+                }
+                placeholder="Enter descriptive value"
+                containerStyle={{width: '100%'}}
+              />
+            ) : item.parameteR_TYPE == 'Descriptive' ? (
+              <CustomDropdown
+                label="Descriptive"
+                selectedValue={item.parameter_input_value}
+                // onValueChange={value => {
+                //   updateLineData(index, 'parameter_input_value', value);
+                // }}
+                onValueChange={text =>
+                  updateGroupedData(
+                    item.parameteR_TYPE,
+                    index,
+                    'parameter_input_value',
+                    text,
+                  )
+                }
+                options={[
+                  {id: '', name: 'Select'},
+                  ...item.parameter_input_format
+                    .split(',')
+                    .map(opt => ({id: opt.trim(), name: opt.trim()})),
+                ]}
+                containerStyle={styles.inputWrapper}
+              />
+            ) : null
+          ) : null}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const getCalendarConstraints = () => {
     const today = new Date();
