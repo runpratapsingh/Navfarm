@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,6 @@ import {COLORS} from '../theme/theme';
 import DashboardScreen from '../screens/DrawerScreens/DashBoard/Dashboard';
 import DataEntryScreen from '../screens/DrawerScreens/DataEntryScreen/DataEntry';
 import BatchCreation from '../screens/DrawerScreens/BatchCreationScreen/BatchCreate';
-import CategorySelection from '../screens/CategorySelectionScreen/CategorySelection';
 import HomeScreen from '../screens/DrawerScreens/Home/HomeScreen';
 import {useTab} from '../hooks/TabContext';
 
