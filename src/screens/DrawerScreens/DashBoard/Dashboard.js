@@ -1,4 +1,4 @@
-import React, {useEffect, useCallback, useState} from 'react';
+import React, {useEffect, useCallback, useState, useRef} from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,11 @@ import {
   Dimensions,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
-import {PieChart} from 'react-native-chart-kit';
+// import {PieChart} from 'react-native-chart-kit';
+import {PieChart} from 'react-native-gifted-charts';
+
 import Header from '../../../components/HeaderComp';
 import {useNavigation} from '@react-navigation/native';
 import Animated, {
@@ -64,24 +67,41 @@ const MetricCard = React.memo(({item, index, delay}) => {
   );
 });
 
-// Legend component
-const Legend = ({data}) => {
-  return (
-    <View style={styles.legendContainer}>
-      {data.map((item, index) => (
-        <View key={index} style={styles.legendItem}>
+// Legend Component
+const Legend = ({data, onLegendPress}) => (
+  <View style={styles.legendContainer}>
+    {data.map((item, index) =>
+      item.population !== 0 ? (
+        <TouchableOpacity
+          key={index}
+          style={styles.legendItem}
+          onPress={() => onLegendPress(index)}>
           <View style={[styles.legendDot, {backgroundColor: item.color}]} />
-          <Text style={styles.legendLabel}>{item.name}</Text>
-        </View>
-      ))}
-    </View>
-  );
-};
+          <Text style={styles.legendLabel}>
+            {`${item.name} (${item.population})`}
+          </Text>
+        </TouchableOpacity>
+      ) : null,
+    )}
+  </View>
+);
 
-// Memoized PieChart component
+// AnimatedPieChart Component
 const AnimatedPieChart = React.memo(({title, data, delay}) => {
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.8);
+
+  const pieData = data.map(item => ({
+    value: item.population,
+    color: item.color,
+    tooltipText: `${item.name} (${item.population})`,
+  }));
+
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(undefined);
+  const [tooltipSelectedIndex, setTooltipSelectedIndex] = useState(undefined);
+
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     opacity.value = withDelay(delay, withTiming(1, {duration: 500}));
@@ -92,38 +112,61 @@ const AnimatedPieChart = React.memo(({title, data, delay}) => {
         withTiming(1, {duration: 200}),
       ),
     );
-  }, [opacity, scale, delay]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{scale: scale.value}],
-  }));
-
-  const [isLoaded, setIsLoaded] = React.useState(false);
+  }, [delay]);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoaded(true), delay);
     return () => clearTimeout(timer);
   }, [delay]);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{scale: scale.value}],
+  }));
+
+  const handleLegendPress = index => {
+    setSelectedIndex(index);
+    setTooltipSelectedIndex(index);
+
+    // Reset any previous timer
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    // Remove focus + tooltip after 10s
+    timeoutRef.current = setTimeout(() => {
+      setSelectedIndex(undefined);
+      setTooltipSelectedIndex(undefined);
+    }, 10000);
+  };
+
   return (
     <View>
       <Text style={styles.chartTitle}>{title}</Text>
       {isLoaded ? (
-        <Animated.View style={animatedStyle}>
+        <Animated.View style={[animatedStyle, styles.chartContainer]}>
           <PieChart
-            data={data}
-            width={screenWidth - 20}
-            height={250}
-            chartConfig={chartConfig}
-            accessor="population"
-            backgroundColor="#fff"
-            paddingLeft="15"
-            absolute
-            hasLegend={false}
-            center={[75, 0, 0, 0]}
+            data={pieData}
+            showText
+            textColor="black"
+            radius={150}
+            textSize={8}
+            focusOnPress
+            selectedIndex={selectedIndex}
+            setSelectedIndex={setSelectedIndex}
+            tooltipSelectedIndex={tooltipSelectedIndex}
+            setTooltipSelectedIndex={setTooltipSelectedIndex}
+            showTooltip
+            showValuesAsTooltipText
+            tooltipDuration={10000} // Match with legend timeout
+            tooltipBackgroundColor="#eee"
+            tooltipBorderRadius={10}
           />
-          <Legend data={data} />
+          <Legend data={data} onLegendPress={handleLegendPress} />
         </Animated.View>
       ) : (
         <View style={styles.loaderContainer}>
@@ -349,17 +392,21 @@ const DashboardScreen = () => {
           ))}
         </View>
 
-        <AnimatedPieChart
-          title="Location wise Running Cost"
-          data={runningCostData}
-          delay={dataLoaded ? metrics.length * 100 + 200 : 1000}
-        />
+        <View style={styles.chartContainer}>
+          <AnimatedPieChart
+            title="Location wise Running Cost"
+            data={runningCostData}
+            delay={dataLoaded ? metrics.length * 100 + 200 : 1000}
+          />
+        </View>
 
-        <AnimatedPieChart
-          title="Location wise Output"
-          data={outputData}
-          delay={dataLoaded ? metrics.length * 100 + 400 : 1000}
-        />
+        <View style={styles.chartContainer}>
+          <AnimatedPieChart
+            title="Location wise Output"
+            data={outputData}
+            delay={dataLoaded ? metrics.length * 100 + 400 : 1000}
+          />
+        </View>
       </ScrollView>
     </>
   );
@@ -436,6 +483,9 @@ const styles = StyleSheet.create({
   legendLabel: {
     fontSize: 12,
     color: '#333',
+  },
+  chartContainer: {
+    alignItems: 'center',
   },
 });
 

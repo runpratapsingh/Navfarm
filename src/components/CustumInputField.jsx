@@ -1,5 +1,6 @@
 import React from 'react';
-import {View, Text, TextInput, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
+import {TextInput} from 'react-native-paper';
 
 const CustomInput = ({
   label,
@@ -12,18 +13,28 @@ const CustomInput = ({
 }) => {
   return (
     <View style={[styles.inputContainer, containerStyle]}>
-      <Text style={styles.label}>{label}</Text>
+      {/* <Text style={styles.label}>{label}</Text> */}
       <TextInput
-        style={[
-          styles.input,
-          props.multiline && styles.multilineInput,
-          !editable && styles.disabledInput,
-          style,
-        ]}
+        // style={[
+        //   styles.input,
+        //   props.multiline && styles.multilineInput,
+        //   !editable && styles.disabledInput,
+        //   style,
+        // ]}
+        style={{
+          fontSize: 12, // affects both placeholder and user input
+          color: 'black',
+          height: 35,
+        }}
+        mode="outlined"
+        label={label}
         value={value}
         onChangeText={onChangeText}
         editable={editable}
         textAlignVertical={props.multiline ? 'top' : 'center'}
+        outlineColor="#999999" // Gray border when not focused
+        outlineStyle={{borderWidth: 1}}
+        activeOutlineColor="#000000" // Blue border on focus
         {...props} // Spread the rest of the props here
       />
     </View>

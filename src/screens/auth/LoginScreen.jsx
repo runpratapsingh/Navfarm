@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback, useMemo} from 'react';
 import {
   View,
   Text,
@@ -40,7 +40,7 @@ const SignInScreen = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const navigation = useNavigation();
 
-  const initializeDatabases = async () => {
+  const initializeDatabases = useCallback(async () => {
     try {
       await initDatabase();
       await initDatabaseForDataEntry();
@@ -48,31 +48,31 @@ const SignInScreen = () => {
     } catch (error) {
       console.error('Error initializing databases:', error);
     }
-  };
+  }, [navigation]);
 
   useEffect(() => {
     checkFormValidity();
   }, [inputValue, password, rememberMe]);
 
-  function handleInputValue(phoneNumber) {
+  const handleInputValue = useCallback(phoneNumber => {
     console.log('Country code', phoneNumber);
     setInputValue(phoneNumber);
-  }
+  }, []);
 
-  function handleSelectedCountry(country) {
+  const handleSelectedCountry = useCallback(country => {
     console.log('Country code', country);
     setSelectedCountry(country);
-  }
+  }, []);
 
-  const handlePasswordChange = text => {
+  const handlePasswordChange = useCallback(text => {
     setPassword(text);
-  };
+  }, []);
 
-  const handleRememberMeChange = () => {
-    setRememberMe(!rememberMe);
-  };
+  const handleRememberMeChange = useCallback(() => {
+    setRememberMe(prev => !prev);
+  }, []);
 
-  const checkFormValidity = () => {
+  const checkFormValidity = useCallback(() => {
     const isValid =
       inputValue.trim() !== '' && password.trim() !== '' && rememberMe;
     console.log('Form Validity Check:', {
@@ -82,9 +82,9 @@ const SignInScreen = () => {
       isValid,
     });
     setIsSignInEnabled(isValid);
-  };
+  }, [inputValue, password, rememberMe]);
 
-  const handleSignIn = async () => {
+  const handleSignIn = useCallback(async () => {
     setLoading(true); // Set loading to true before API call
     try {
       const phoneNumberWithoutSpaces = inputValue.replace(/\s+/g, '');
@@ -137,30 +137,33 @@ const SignInScreen = () => {
     } finally {
       setLoading(false); // Set loading to false after API call
     }
-  };
+  }, [inputValue, password, selectedCountry, navigation]);
 
-  const fetchCommonDetails = async (companyId, userId) => {
-    try {
-      const response = await api.get(API_ENDPOINTS.COMMON_DETAILS, {
-        params: {
-          company_id: companyId,
-          user_id: userId,
-        },
-      });
-      console.log('Common details fetched:', response.data);
-      if (response?.data?.status === 'success') {
-        const commonDetails = response.data.data.common_details[0];
-        await appStorage.setCommonDetails(commonDetails);
-        console.log('Common details stored successfully:', commonDetails);
-        if (commonDetails) {
-          // await initializeDatabases();
-          navigation.replace('CategorySelection');
+  const fetchCommonDetails = useCallback(
+    async (companyId, userId) => {
+      try {
+        const response = await api.get(API_ENDPOINTS.COMMON_DETAILS, {
+          params: {
+            company_id: companyId,
+            user_id: userId,
+          },
+        });
+        console.log('Common details fetched:', response.data);
+        if (response?.data?.status === 'success') {
+          const commonDetails = response.data.data.common_details[0];
+          await appStorage.setCommonDetails(commonDetails);
+          console.log('Common details stored successfully:', commonDetails);
+          if (commonDetails) {
+            // await initializeDatabases();
+            navigation.replace('CategorySelection');
+          }
         }
+      } catch (error) {
+        console.error('Error fetching common details:', error);
       }
-    } catch (error) {
-      console.error('Error fetching common details:', error);
-    }
-  };
+    },
+    [navigation],
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -183,7 +186,6 @@ const SignInScreen = () => {
                 </View>
               </View>
               <Text style={styles.title}>Sign in to your account</Text>
-              {/* Email Input */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Phone Number</Text>
                 <PhoneInput
@@ -206,7 +208,6 @@ const SignInScreen = () => {
                   }}
                 />
               </View>
-              {/* Password Input */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Password</Text>
                 <View style={styles.inputWrapper}>
@@ -233,11 +234,9 @@ const SignInScreen = () => {
                   </TouchableOpacity>
                 </View>
               </View>
-              {/* Forgot Password */}
               <TouchableOpacity style={styles.forgotPassword}>
                 <Text style={styles.linkText}>Forget password?</Text>
               </TouchableOpacity>
-              {/* Remember Me and Agreements */}
               <View style={styles.checkboxContainer}>
                 <TouchableOpacity
                   style={styles.checkbox}
@@ -255,15 +254,12 @@ const SignInScreen = () => {
                 </Text>
               </View>
               <View style={styles.divider} />
-              {/* Sign In Button */}
               <CustomButton
                 title={loading ? 'Signing in...' : 'Sign in'}
                 onPress={handleSignIn}
                 disabled={!isSignInEnabled || loading}
               />
-              {/* Show loading indicator */}
               <View style={styles.divider} />
-              {/* Alternative Sign In Methods */}
               <View style={styles.socialIconsContainer}>
                 <TouchableOpacity
                   style={styles.socialButton}
@@ -277,7 +273,6 @@ const SignInScreen = () => {
                 </TouchableOpacity>
               </View>
               <View style={styles.divider} />
-              {/* Create Account */}
               <View style={styles.createAccountContainer}>
                 <Text style={styles.createAccountText}>
                   Don't have an account?{' '}

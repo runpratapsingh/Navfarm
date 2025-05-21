@@ -441,6 +441,7 @@ const EditDataEntry = ({route}) => {
     // Flatten and update lineData
     const flattened = Object.values(updatedGrouped).flat();
     setLineData(flattened);
+    console.log('Updated lineData:', flattened);
   };
 
   const getDataEntryDetails = async () => {
@@ -485,7 +486,7 @@ const EditDataEntry = ({route}) => {
         });
 
         console.log(
-          'response---------------',
+          'response--------------- online',
           response.data,
           batch_id,
           response.data?.data?.line,
@@ -502,7 +503,7 @@ const EditDataEntry = ({route}) => {
             );
           });
 
-          console.log('status', response);
+          console.log('offline data ---------------------->', response);
 
           if (!response || response.status !== 'success') {
             console.log('status111', response);
@@ -569,6 +570,7 @@ const EditDataEntry = ({route}) => {
             return acc;
           }, {}),
         );
+        console.log('`groupedData:', grouped);
       } else if (
         response.status === 'error' &&
         response.message == 'Cannot find table 0.'
@@ -594,13 +596,15 @@ const EditDataEntry = ({route}) => {
   };
 
   const renderLineItem = ({item, index}) => {
+    console.log('jfdhsjfhskjfhsjkfhkjshfkjsd', item);
+
     const decimalRegex = /^\d*\.?\d{0,3}$/;
     return (
       <View style={styles.section} key={index}>
+        <View style={styles.textParameterNameContainer}>
+          <Text style={styles.sectionTitle}>{item.parameteR_NAME || ''}</Text>
+        </View>
         <View style={styles.row}>
-          <View style={styles.textParameterNameContainer}>
-            <Text style={styles.sectionTitle}>{item.parameteR_NAME || ''}</Text>
-          </View>
           <CustomInput
             label="Total Units"
             value={item.actuaL_VALUE?.toString()}
@@ -978,8 +982,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '400',
     color: COLORS.SecondaryColor,
   },
   sectionTitle1: {
@@ -1021,17 +1025,18 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   inputWrapper: {
     width: '48%',
   },
   inputWrapper1: {
-    width: '25%',
+    width: '44%',
   },
   textParameterNameContainer: {
-    width: '30%',
+    width: '100%',
     justifyContent: 'center',
+    marginBottom: 5,
   },
 });
 
