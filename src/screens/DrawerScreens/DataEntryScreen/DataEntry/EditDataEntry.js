@@ -9,7 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import {COLORS} from '../../../../theme/theme';
+import {COLORS, FONTFAMILY} from '../../../../theme/theme';
 import CustomInput from '../../../../components/CustumInputField';
 import HeaderWithBtn from '../../../../components/HeaderWithBackBtn';
 import {appStorage} from '../../../../utils/services/StorageHelper';
@@ -955,7 +955,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     color: COLORS.SecondaryColor,
   },
   toggleButton: {
@@ -983,12 +983,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '400',
+    fontFamily: FONTFAMILY.regular,
     color: COLORS.SecondaryColor,
   },
   sectionTitle1: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     color: COLORS.primaryColor,
   },
   buttonContainer: {
@@ -1008,6 +1008,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
+    fontFamily: FONTFAMILY.semibold,
     textAlign: 'center',
   },
   sectionTitleHeader: {
@@ -1025,7 +1026,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    // marginBottom: 10,
   },
   inputWrapper: {
     width: '48%',

@@ -9,7 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import {COLORS} from '../theme/theme';
+import {COLORS, FONTFAMILY} from '../theme/theme';
 
 const {width} = Dimensions.get('window');
 
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -86,6 +86,7 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
     marginBottom: 20,
+    fontFamily: FONTFAMILY.regular,
   },
   closeButton: {
     paddingVertical: 10,
@@ -95,6 +96,7 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontFamily: FONTFAMILY.semibold,
   },
 });
 

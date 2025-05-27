@@ -295,7 +295,10 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 10,
   },
-  accordionTitle: {fontSize: 18, fontFamily: FONTFAMILY.bold},
+  accordionTitle: {
+    fontSize: 18,
+    fontFamily: FONTFAMILY.bold
+  },
   icon: {marginLeft: 10},
   tableContainer: {
     marginTop: 10,
@@ -307,7 +310,11 @@ const styles = StyleSheet.create({
     padding: 10,
     justifyContent: 'space-between',
   },
-  headerText: {fontFamily: FONTFAMILY.bold, flex: 1, textAlign: 'center'},
+  headerText: {
+    fontFamily: FONTFAMILY.bold,
+    flex: 1,
+    textAlign: 'center'
+  },
   tableRow: {
     flexDirection: 'row',
     padding: 10,
@@ -330,12 +337,14 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
     color: '#333',
+    fontFamily: FONTFAMILY.regular,
   },
   emptyText: {
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
     color: '#333',
+    fontFamily: FONTFAMILY.regular,
   },
 });
 

@@ -3,6 +3,7 @@ import {View, Text, Image, StyleSheet, Animated, StatusBar} from 'react-native';
 import {COLORS} from '../../theme/theme';
 import {requireImage} from '../../utils/JSON/Images';
 import {appStorage} from '../../utils/services/StorageHelper';
+import {FONTFAMILY} from '../../theme/theme';
 
 const SplashScreen = ({navigation}) => {
   const fadeAnim = new Animated.Value(0);
@@ -70,7 +71,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     color: '#333',
   },
   logoContainer: {

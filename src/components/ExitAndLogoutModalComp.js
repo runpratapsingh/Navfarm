@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Modal} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import {FONTFAMILY} from '../theme/theme';
 
 const ConfirmLogoutAndExitModal = ({
   visible,
@@ -72,13 +73,14 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FONTFAMILY.semibold,
     color: '#333',
     marginBottom: 10,
   },
   modalText: {
     fontSize: 16,
     textAlign: 'center',
+    fontFamily: FONTFAMILY.regular,
     color: '#555',
     marginBottom: 25,
   },
@@ -105,7 +107,7 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTFAMILY.semibold,
   },
   confirmText: {
     color: '#fff',

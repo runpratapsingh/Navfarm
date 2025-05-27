@@ -14,7 +14,7 @@ import {
   Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import {COLORS} from '../../theme/theme';
+import {COLORS, FONTFAMILY} from '../../theme/theme';
 import PhoneInput from 'react-native-international-phone-number';
 import {useNavigation} from '@react-navigation/native';
 import CustomButton from '../../components/CustumButton';
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 20,
-    paddingBottom: 40, // Add extra padding at the bottom
+    paddingBottom: 40,
   },
   innerContainer: {
     flex: 1,
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     marginBottom: 30,
     textAlign: 'center',
     color: '#333',
@@ -327,6 +327,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
     color: '#333',
+    fontFamily: FONTFAMILY.regular,
   },
   logoContainer: {
     height: 63,
@@ -351,6 +352,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 50,
     fontSize: 16,
+    fontFamily: FONTFAMILY.regular,
   },
   divider: {
     height: 1,
@@ -372,9 +374,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     flexShrink: 1,
+    fontFamily: FONTFAMILY.regular,
   },
   boldText: {
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     color: '#4a90e2',
   },
   signInButton: {
@@ -384,12 +387,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   signInButtonDisabled: {
-    backgroundColor: '#ccc', // Change this to your desired disabled color
+    backgroundColor: '#ccc',
   },
   signInButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.semibold,
   },
   createAccountContainer: {
     flexDirection: 'row',
@@ -398,9 +401,11 @@ const styles = StyleSheet.create({
   },
   createAccountText: {
     color: '#666',
+    fontFamily: FONTFAMILY.regular,
   },
   linkText: {
     color: '#4a90e2',
+    fontFamily: FONTFAMILY.semibold,
   },
   socialIconsContainer: {
     flexDirection: 'row',

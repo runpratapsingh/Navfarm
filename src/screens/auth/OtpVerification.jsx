@@ -13,6 +13,7 @@ import {SvgXml} from 'react-native-svg';
 import {SvgxmlIMages} from '../../utils/JSON/Svgxml';
 import CustomButton from '../../components/CustumButton';
 import {useNavigation} from '@react-navigation/native';
+import {FONTFAMILY} from '../../theme/theme';
 const {height, width} = Dimensions.get('window');
 
 const OTPVerificationScreen = ({route}) => {
@@ -65,7 +66,7 @@ const OTPVerificationScreen = ({route}) => {
       </View>
 
       <View style={styles.resendTextContainer}>
-        <Text style={styles.resendText}>Didn’t receive the OTP?</Text>
+        <Text style={styles.resendText}>Didn't receive the OTP?</Text>
         <TouchableOpacity onPress={() => console.log('Resent OTP!')}>
           <Text style={styles.resendLink}>Resend OTP</Text>
         </TouchableOpacity>
@@ -102,16 +103,17 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     color: '#333',
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
     marginTop: 8,
+    fontFamily: FONTFAMILY.regular,
   },
   boldText: {
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     color: '#000',
   },
   otpContainer: {
@@ -125,14 +127,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     width: 40,
     marginHorizontal: 5,
+    fontFamily: FONTFAMILY.regular,
   },
   resendText: {
     fontSize: 16,
     color: '#888',
+    fontFamily: FONTFAMILY.regular,
   },
   resendLink: {
     color: '#007bff',
-    fontWeight: '600',
+    fontFamily: FONTFAMILY.semibold,
   },
   button: {
     marginTop: 20,
@@ -148,6 +152,7 @@ const styles = StyleSheet.create({
   },
   pinCodeText: {
     fontSize: 18,
+    fontFamily: FONTFAMILY.regular,
   },
   resendTextContainer: {
     flexDirection: 'row',

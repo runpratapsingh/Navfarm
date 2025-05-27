@@ -26,6 +26,7 @@ const CustomInput = ({
           fontSize: 12, // affects both placeholder and user input
           color: 'black',
           height: 35,
+          fontFamily: FONTFAMILY.regular,
         }}
         mode="outlined"
         label={label}
@@ -50,6 +51,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     color: '#555',
+    fontFamily: FONTFAMILY.regular,
   },
   input: {
     borderWidth: 1,
@@ -58,6 +60,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
     backgroundColor: '#fff',
+    fontFamily: FONTFAMILY.regular,
   },
   multilineInput: {
     height: 100,

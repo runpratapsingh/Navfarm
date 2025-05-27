@@ -3,6 +3,7 @@ import {View, StyleSheet, StatusBar} from 'react-native';
 import HeaderWithBtn from '../../../../components/HeaderWithBackBtn';
 import CustomInput from '../../../../components/CustumInputField';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {FONTFAMILY} from '../../../../theme/theme';
 
 const LineDetailScreen = ({route}) => {
   const {lineItem} = route.params;
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     marginBottom: 16,
     color: '#333',
   },

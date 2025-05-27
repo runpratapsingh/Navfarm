@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import {COLORS} from '../../../../theme/theme';
+import {COLORS, FONTFAMILY} from '../../../../theme/theme';
 const {width} = Dimensions.get('window');
 
 // Define parameter types for the dropdown
@@ -230,7 +230,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
-  header: {fontSize: 18, fontWeight: 'bold', color: COLORS.SecondaryColor},
+  header: {
+    fontSize: 18,
+    fontFamily: FONTFAMILY.bold,
+    color: COLORS.SecondaryColor
+  },
   dropdown: {
     height: 50,
     borderColor: '#ccc',
@@ -246,6 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     marginBottom: 10,
+    fontFamily: FONTFAMILY.regular,
   },
   button: {
     backgroundColor: COLORS.SecondaryColor,
@@ -254,20 +259,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  buttonText: {color: '#fff', fontWeight: 'bold'},
+  buttonText: {
+    color: '#fff',
+    fontFamily: FONTFAMILY.semibold,
+  },
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: '#ddd',
     padding: 10,
   },
-  tableHeaderText: {fontWeight: 'bold', width: 100, textAlign: 'center'},
+  tableHeaderText: {
+    fontFamily: FONTFAMILY.bold,
+    width: 100,
+    textAlign: 'center'
+  },
   tableRow: {
     flexDirection: 'row',
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
-  tableCell: {width: 100, textAlign: 'center'},
+  tableCell: {
+    width: 100,
+    textAlign: 'center',
+    fontFamily: FONTFAMILY.regular,
+  },
   toggleButton: {
     backgroundColor: COLORS.SecondaryColor,
     borderRadius: 15,

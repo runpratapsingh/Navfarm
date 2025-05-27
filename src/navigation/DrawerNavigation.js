@@ -8,6 +8,7 @@ import HomeScreen from '../screens/DrawerScreens/Home/HomeScreen';
 import Dashboard from '../screens/DrawerScreens/DashBoard/Dashboard';
 import BottomNavigation from './BottomNavigation';
 import {TabProvider} from '../hooks/TabContext';
+import {FONTFAMILY} from '../theme/theme';
 
 const Drawer = createDrawerNavigator();
 
@@ -34,7 +35,11 @@ function DrawerNavigation() {
               marginVertical: 5,
               marginRight: 0,
             },
-            drawerLabelStyle: {color: '#007aff', fontSize: 16},
+            drawerLabelStyle: {
+              color: '#007aff',
+              fontSize: 16,
+              fontFamily: FONTFAMILY.semibold,
+            },
             drawerLabel: 'Dashboard',
             drawerIcon: ({color, size}) => (
               <Icon name="tachometer-alt" color="#000000" size={20} />
@@ -52,7 +57,11 @@ function DrawerNavigation() {
               marginVertical: 5,
               marginRight: 0,
             },
-            drawerLabelStyle: {color: '#007aff', fontSize: 16},
+            drawerLabelStyle: {
+              color: '#007aff',
+              fontSize: 16,
+              fontFamily: FONTFAMILY.semibold,
+            },
             drawerLabel: 'Home',
             drawerIcon: ({color, size}) => (
               <Icon name="home" color="#000000" size={20} />
@@ -70,7 +79,11 @@ function DrawerNavigation() {
               marginVertical: 5,
               marginRight: 0,
             },
-            drawerLabelStyle: {color: '#007aff', fontSize: 16},
+            drawerLabelStyle: {
+              color: '#007aff',
+              fontSize: 16,
+              fontFamily: FONTFAMILY.semibold,
+            },
             drawerLabel: 'Data Entry',
             drawerIcon: ({color, size}) => (
               <Icon name="keyboard" color="#000000" size={20} />
@@ -88,7 +101,11 @@ function DrawerNavigation() {
               marginVertical: 5,
               marginRight: 0,
             },
-            drawerLabelStyle: {color: '#007aff', fontSize: 16},
+            drawerLabelStyle: {
+              color: '#007aff',
+              fontSize: 16,
+              fontFamily: FONTFAMILY.semibold,
+            },
             drawerLabel: 'Batch Creation',
             drawerIcon: ({color, size}) => (
               <Icon name="object-group" color="#000000" size={20} />
@@ -106,7 +123,11 @@ function DrawerNavigation() {
               marginVertical: 5,
               marginRight: 0,
             },
-            drawerLabelStyle: {color: '#007aff', fontSize: 16},
+            drawerLabelStyle: {
+              color: '#007aff',
+              fontSize: 16,
+              fontFamily: FONTFAMILY.semibold,
+            },
             drawerLabel: 'BottomNavigation',
             drawerIcon: ({color, size}) => (
               <Icon name="object-group" color="#000000" size={20} />

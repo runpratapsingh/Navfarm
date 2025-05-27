@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import {COLORS} from '../../../../theme/theme';
+import {COLORS, FONTFAMILY} from '../../../../theme/theme';
 import CustomInput from '../../../../components/CustumInputField';
 
 const {height, width} = Dimensions.get('window');
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     color: COLORS.SecondaryColor,
   },
   toggleButton: {
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     width: width * 0.3,
   },
   tableHeader: {
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     textAlign: 'center',
     color: '#fff',
   },
@@ -465,6 +465,7 @@ const styles = StyleSheet.create({
   },
   tableCell: {
     textAlign: 'center',
+    fontFamily: FONTFAMILY.regular,
   },
   tableRowEven: {
     backgroundColor: '#fff',
@@ -508,18 +509,22 @@ const styles = StyleSheet.create({
   pageNumberText: {
     fontSize: 16,
     color: COLORS.SecondaryColor,
+    fontFamily: FONTFAMILY.regular,
   },
   pageNumberText1: {
     fontSize: 16,
     color: '#fff',
+    fontFamily: FONTFAMILY.regular,
   },
   disabledPageNumberText: {
     fontSize: 16,
     color: COLORS.SecondaryColor,
+    fontFamily: FONTFAMILY.regular,
   },
   activePageNumberText: {
     fontSize: 16,
     color: '#fff',
+    fontFamily: FONTFAMILY.regular,
   },
   row: {
     flexDirection: 'row',

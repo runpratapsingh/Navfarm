@@ -1,5 +1,6 @@
 import {showMessage} from 'react-native-flash-message';
 import {Platform, Dimensions} from 'react-native';
+import {FONTFAMILY} from '../../theme/theme';
 
 const {width} = Dimensions.get('window');
 
@@ -10,7 +11,7 @@ export const displayMessage = (message, type = 'success') => {
     icon: type,
     duration: 3000,
     textStyle: {
-      fontFamily: 'Poppins-Regular',
+      fontFamily: FONTFAMILY.regular,
       fontSize: 12,
       color: '#fff',
     },

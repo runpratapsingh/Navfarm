@@ -18,6 +18,7 @@ import {checkNetworkStatus} from '../../../services/NetworkServices/Network';
 import {COLORS} from '../../../theme/theme';
 import DataEntryAddLine from '../DataEntryScreen/DataEntry/DataEntry_AddLine';
 import {navigate} from '../../../utils/services/NavigationService';
+import {FONTFAMILY} from '../../../theme/theme';
 
 const DailyDataEntry = () => {
   const [nature, setNature] = useState('');
@@ -428,7 +429,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     marginBottom: 10,
   },
   dropdownContainer: {
@@ -436,7 +437,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONTFAMILY.semibold,
   },
   dropdown: {
     backgroundColor: '#FFF',
@@ -455,7 +456,7 @@ const styles = StyleSheet.create({
   searchText: {
     color: '#FFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.semibold,
   },
   SearchedItemContainer: {
     marginTop: 20,
@@ -464,7 +465,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 10,
-    // marginHorizontal: 16,
     paddingBottom: 25,
     marginTop: 20,
   },
@@ -477,6 +477,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
+    fontFamily: FONTFAMILY.semibold,
     textAlign: 'center',
   },
   sectionTitleHeader: {
@@ -492,7 +493,7 @@ const styles = StyleSheet.create({
   },
   dropdownWrapper: {
     flex: 1,
-    marginHorizontal: 5, // Adjust as needed
+    marginHorizontal: 5,
   },
 });
 

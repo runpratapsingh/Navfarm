@@ -23,6 +23,7 @@ import {useIsFocused, useNavigation} from '@react-navigation/native';
 import Header from '../../../components/HeaderComp';
 import {useTab} from '../../../hooks/TabContext';
 import {COLORS} from '../../../theme/theme';
+import {FONTFAMILY} from '../../../theme/theme';
 
 const initialData = [
   {key: 'poultry', label: 'Poultry', image: requireImage.poultry},
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
   },
 });
 

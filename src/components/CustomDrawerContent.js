@@ -11,7 +11,7 @@ import {
 import {DrawerItemList} from '@react-navigation/drawer';
 import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import {COLORS} from '../theme/theme';
+import {COLORS, FONTFAMILY} from '../theme/theme';
 import {logout} from '../utils/UtilsFn/Logout';
 import {appStorage} from '../utils/services/StorageHelper';
 import ConfirmLogoutAndExitModal from './ExitAndLogoutModalComp';
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   userName: {
     marginTop: 10,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     color: '#fff',
   },
   drawerItemList: {
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   logoutText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     marginLeft: 10,
   },
 });

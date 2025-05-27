@@ -22,7 +22,11 @@ const CustomDropdown = ({
           data={options}
           labelField="name"
           activeColor={COLORS.SecondaryColor}
-          selectedTextStyle={{color: COLORS.SecondaryColor}}
+          selectedTextStyle={{
+            color: COLORS.SecondaryColor,
+            fontFamily: FONTFAMILY.regular,
+          }}
+          placeholderStyle={{color: '#555', fontFamily: FONTFAMILY.regular}}
           valueField="id"
           placeholder="Select"
           value={selectedValue} // array of ids
@@ -39,6 +43,9 @@ const CustomDropdown = ({
           labelField="name"
           valueField="id"
           placeholder="Select"
+          selectedTextStyle={{
+            fontFamily: FONTFAMILY.regular,
+          }}
           placeholderStyle={{color: '#555', fontFamily: FONTFAMILY.regular}}
           value={selectedValue} // single id
           onChange={item => onValueChange(item.id)}

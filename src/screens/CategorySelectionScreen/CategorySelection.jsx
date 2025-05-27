@@ -23,6 +23,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import ConfirmLogoutAndExitModal from '../../components/ExitAndLogoutModalComp';
 import {useNavigation} from '@react-navigation/native';
 import {fetchData} from '../../services/ApiServices/Apiservice';
+import {FONTFAMILY} from '../../theme/theme';
 
 const initialData = [
   {key: 'poultry', label: 'Poultry', image: requireImage.poultry},
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
   },
 });
 
