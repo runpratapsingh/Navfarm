@@ -14,10 +14,10 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-import {COLORS} from '../theme/theme';
+import {COLORS, FONTFAMILY} from '../theme/theme';
 import DashboardScreen from '../screens/DrawerScreens/DashBoard/Dashboard';
 import DataEntryScreen from '../screens/DrawerScreens/DataEntryScreen/DataEntry';
-import BatchCreation from '../screens/DrawerScreens/BatchCreationScreen/BatchCreate';
+import BatchCreation from '../screens/DrawerScreens/DailyDataEntryScreen/DailyDataEntry';
 import HomeScreen from '../screens/DrawerScreens/Home/HomeScreen';
 import {useTab} from '../hooks/TabContext';
 
@@ -31,10 +31,11 @@ const BatchCreationScreen = () => <BatchCreation />;
 const CategoryScreen = () => <HomeScreen />;
 
 // Map tabs to their screens
+// Map tabs to their screens
 const screenMap = {
   Dashboard: DashBoardScreen,
   DataEntry: Data_EntryScreen,
-  BatchCreation: BatchCreationScreen,
+  'Daily Data Entry': BatchCreationScreen,
   Categories: CategoryScreen,
 };
 
@@ -90,7 +91,7 @@ const BottomNavigation = () => {
   const tabs = [
     {name: 'Dashboard', icon: 'tachometer-alt'},
     {name: 'DataEntry', icon: 'keyboard'},
-    {name: 'BatchCreation', icon: 'object-group'},
+    {name: 'Daily Data Entry', icon: 'object-group'},
     {name: 'Categories', icon: 'layer-group'},
   ];
 
@@ -184,9 +185,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primaryColor,
   },
   tabText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#333',
     marginTop: 4,
+    fontFamily: FONTFAMILY.regular,
   },
   activeTabText: {
     color: COLORS.SecondaryColor,

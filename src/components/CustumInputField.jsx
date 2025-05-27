@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {TextInput} from 'react-native-paper';
+import {FONTFAMILY} from '../theme/theme';
 
 const CustomInput = ({
   label,

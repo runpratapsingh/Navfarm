@@ -12,6 +12,7 @@ import api from '../../../../Apiconfig/ApiconfigWithInterceptor';
 import {API_ENDPOINTS} from '../../../../Apiconfig/Apiconfig';
 import {appStorage} from '../../../../utils/services/StorageHelper';
 import StatusModal from '../../../../components/CustumModal';
+import {FONTFAMILY} from '../../../../theme/theme';
 
 const LinkedDropdowns = () => {
   const [nature, setNature] = useState('');
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
   searchText: {
     color: '#FFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
   },
   SearchedItemContainer: {
     marginTop: 20,

@@ -47,7 +47,11 @@ const uoms = [
   {label: 'KG', value: 'KG'},
 ];
 
-export default function DataEntryAddLine({isFormVisible, setIsFormVisible}) {
+export default function DataEntryAddLine({
+  isFormVisible,
+  setIsFormVisible,
+  isDailyDataEntry = false,
+}) {
   const [selectedParameterType, setSelectedParameterType] = useState(null);
   const [selectedParameterName, setSelectedParameterName] = useState(null);
   const [totalUnits, setTotalUnits] = useState('');
@@ -117,7 +121,10 @@ export default function DataEntryAddLine({isFormVisible, setIsFormVisible}) {
       <TouchableOpacity
         style={styles.headerContainer}
         onPress={() => setIsFormVisible(!isFormVisible)}>
-        <Text style={styles.header}>Line</Text>
+        <Text style={styles.header}>
+          {' '}
+          {isDailyDataEntry ? 'Batch-Id' : 'Line'}
+        </Text>
         <TouchableOpacity
           style={styles.toggleButton}
           onPress={() => setIsFormVisible(!isFormVisible)}>

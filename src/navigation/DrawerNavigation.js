@@ -3,7 +3,7 @@ import {createDrawerNavigator} from '@react-navigation/drawer';
 import CustomDrawerContent from '../components/CustomDrawerContent';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import DataEntryScreen from '../screens/DrawerScreens/DataEntryScreen/DataEntry';
-import BatchCreation from '../screens/DrawerScreens/BatchCreationScreen/BatchCreate';
+import BatchCreation from '../screens/DrawerScreens/DailyDataEntryScreen/DailyDataEntry';
 import HomeScreen from '../screens/DrawerScreens/Home/HomeScreen';
 import Dashboard from '../screens/DrawerScreens/DashBoard/Dashboard';
 import BottomNavigation from './BottomNavigation';

@@ -1,7 +1,7 @@
-import {Dropdown} from 'react-native-element-dropdown';
+import {Dropdown, MultiSelect} from 'react-native-element-dropdown';
 import {Text, View, ActivityIndicator, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import {COLORS} from '../theme/theme';
+import {COLORS, FONTFAMILY} from '../theme/theme';
 
 const CustomDropdown = ({
   label,
@@ -9,12 +9,29 @@ const CustomDropdown = ({
   onValueChange,
   options,
   loading,
+  multiSelect = false,
 }) => {
   return (
     <View style={styles.dropdownContainer}>
       <Text style={styles.label}>{label} *</Text>
       {loading ? (
         <ActivityIndicator size="small" color={COLORS.SecondaryColor} />
+      ) : multiSelect ? (
+        <MultiSelect
+          style={styles.dropdown}
+          data={options}
+          labelField="name"
+          activeColor={COLORS.SecondaryColor}
+          selectedTextStyle={{color: COLORS.SecondaryColor}}
+          valueField="id"
+          placeholder="Select"
+          value={selectedValue} // array of ids
+          onChange={onValueChange}
+          selectedStyle={styles.selectedStyle}
+          renderRightIcon={() => (
+            <Icon name="chevron-down" color="#555" size={14} />
+          )}
+        />
       ) : (
         <Dropdown
           style={styles.dropdown}
@@ -22,11 +39,13 @@ const CustomDropdown = ({
           labelField="name"
           valueField="id"
           placeholder="Select"
-          value={selectedValue}
+          placeholderStyle={{color: '#555', fontFamily: FONTFAMILY.regular}}
+          value={selectedValue} // single id
           onChange={item => onValueChange(item.id)}
           renderRightIcon={visible => (
             <Icon name={visible ? 'chevron-up' : 'chevron-down'} />
           )}
+          itemTextStyle={{fontFamily: FONTFAMILY.regular, color: '#555'}}
         />
       )}
     </View>
@@ -37,13 +56,14 @@ export default CustomDropdown;
 
 const styles = StyleSheet.create({
   dropdownContainer: {
-    // marginBottom: 15,
     width: '100%',
+    marginBottom: 10,
   },
   label: {
     fontSize: 14,
     paddingBottom: 5,
-    color: '#555',
+    color: '#000',
+    fontFamily: FONTFAMILY.regular,
   },
   dropdown: {
     backgroundColor: '#FFF',
@@ -52,6 +72,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    height: 35,
+    height: 45,
+  },
+  selectedStyle: {
+    display: 'none',
+    borderRadius: 12,
+    backgroundColor: COLORS.SecondaryColor + '20',
+    padding: 5,
+    margin: 2,
   },
 });

@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import {COLORS} from '../theme/theme';
+import {COLORS, FONTFAMILY} from '../theme/theme';
 
 const Header = ({onFilterPress, title}) => {
   return (
@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     color: 'white',
+    fontFamily: FONTFAMILY.semibold,
   },
 });
 

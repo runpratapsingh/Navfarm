@@ -24,6 +24,7 @@ import {appStorage} from '../../../utils/services/StorageHelper';
 import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
 import {CHART_COLORS} from '../../../utils/JSON/ChartColors';
 import {fetchData} from '../../../services/ApiServices/Apiservice';
+import {FONTFAMILY} from '../../../theme/theme';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -441,18 +442,18 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: 16,
     marginBottom: 5,
+    fontFamily: FONTFAMILY.extraBold,
   },
   cardValue: {
     color: '#000',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 14,
+    fontFamily: FONTFAMILY.extraBold,
   },
   chartTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONTFAMILY.bold,
     marginTop: 25,
     marginBottom: 10,
     paddingHorizontal: 5,
@@ -483,6 +484,7 @@ const styles = StyleSheet.create({
   legendLabel: {
     fontSize: 12,
     color: '#333',
+    fontFamily: FONTFAMILY.regular,
   },
   chartContainer: {
     alignItems: 'center',

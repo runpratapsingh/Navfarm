@@ -172,92 +172,120 @@ const DataEntryHistorySearchedEntry = ({data}) => {
 
       {formState.isHeaderVisible && (
         <View style={styles.headerDetails}>
-          <CustomInput
-            label="Nature Of Business"
-            value={formState.natureOfBusiness}
-            onChangeText={text => updateFormState('natureOfBusiness', text)}
-            editable={false}
-            style={styles.disabledInput}
-          />
-          <CustomInput
-            label="Line Of Business"
-            value={formState.lineOfBusiness}
-            onChangeText={text => updateFormState('lineOfBusiness', text)}
-            editable={false}
-            style={styles.disabledInput}
-          />
-          <CustomInput
-            label="Remaining Qty"
-            value={formState.remainingQty}
-            onChangeText={text => updateFormState('remainingQty', text)}
-            editable={false}
-            style={styles.disabledInput}
-          />
-          <CustomInput
-            label="Breed Name"
-            value={formState.breedName}
-            onChangeText={text => updateFormState('breedName', text)}
-            editable={false}
-            style={styles.disabledInput}
-          />
-          <CustomInput
-            label="Template Name"
-            value={formState.templateName}
-            onChangeText={text => updateFormState('templateName', text)}
-            editable={false}
-            style={styles.disabledInput}
-          />
-          <CustomInput
-            label="Posting Date"
-            value={formState.postingDate}
-            onChangeText={text => updateFormState('postingDate', text)}
-            editable={false}
-            style={styles.disabledInput}
-          />
+          <View style={styles.row}>
+            <CustomInput
+              label="Nature Of Business"
+              value={formState.natureOfBusiness}
+              onChangeText={text => updateFormState('natureOfBusiness', text)}
+              editable={false}
+              style={styles.disabledInput}
+              containerStyle={styles.inputWrapper}
+            />
+            <CustomInput
+              label="Line Of Business"
+              value={formState.lineOfBusiness}
+              onChangeText={text => updateFormState('lineOfBusiness', text)}
+              editable={false}
+              style={styles.disabledInput}
+              containerStyle={styles.inputWrapper}
+            />
+          </View>
+          <View style={styles.row}>
+            <CustomInput
+              label="Remaining Qty"
+              value={formState.remainingQty}
+              onChangeText={text => updateFormState('remainingQty', text)}
+              editable={false}
+              style={styles.disabledInput}
+              containerStyle={styles.inputWrapper}
+            />
+            <CustomInput
+              label="Breed Name"
+              value={formState.breedName}
+              onChangeText={text => updateFormState('breedName', text)}
+              editable={false}
+              style={styles.disabledInput}
+              containerStyle={styles.inputWrapper}
+            />
+          </View>
+          <View style={styles.row}>
+            <CustomInput
+              label="Template Name"
+              value={formState.templateName}
+              onChangeText={text => updateFormState('templateName', text)}
+              editable={false}
+              style={styles.disabledInput}
+              containerStyle={styles.inputWrapper}
+            />
+            <CustomInput
+              label="Posting Date"
+              value={formState.postingDate}
+              onChangeText={text => updateFormState('postingDate', text)}
+              editable={false}
+              style={styles.disabledInput}
+              containerStyle={styles.inputWrapper}
+            />
+          </View>
           {formState.showAdditionalFields && (
             <>
-              <CustomInput
-                label="Sub Location Name"
-                value={formState.subLocationName}
-                onChangeText={text => updateFormState('subLocationName', text)}
-                editable={false}
-                style={styles.disabledInput}
-              />
-              <CustomInput
-                label="Age (Days)"
-                value={formState.ageDays}
-                onChangeText={text => updateFormState('ageDays', text)}
-                editable={false}
-                style={styles.disabledInput}
-              />
-              <CustomInput
-                label="Age (Week)"
-                value={formState.ageWeek}
-                onChangeText={text => updateFormState('ageWeek', text)}
-                editable={false}
-                style={styles.disabledInput}
-              />
-              <CustomInput
-                label="Opening Quantity"
-                value={formState.openingQuantity}
-                onChangeText={text => updateFormState('openingQuantity', text)}
-                editable={false}
-                style={styles.disabledInput}
-              />
-              <CustomInput
-                label="Start Date"
-                value={formState.startDate}
-                onChangeText={text => updateFormState('startDate', text)}
-                editable={false}
-                style={styles.disabledInput}
-              />
-              <CustomInput
-                label="Running Cost"
-                value={formState.runningCost}
-                onChangeText={text => updateFormState('runningCost', text)}
-                editable={false}
-                style={styles.disabledInput}
-              />
+              <View style={styles.row}>
+                <CustomInput
+                  label="Sub Location Name"
+                  value={formState.subLocationName}
+                  onChangeText={text =>
+                    updateFormState('subLocationName', text)
+                  }
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+                <CustomInput
+                  label="Age (Days)"
+                  value={formState.ageDays}
+                  onChangeText={text => updateFormState('ageDays', text)}
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+              </View>
+              <View style={styles.row}>
+                <CustomInput
+                  label="Age (Week)"
+                  value={formState.ageWeek}
+                  onChangeText={text => updateFormState('ageWeek', text)}
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+                <CustomInput
+                  label="Opening Quantity"
+                  value={formState.openingQuantity}
+                  onChangeText={text =>
+                    updateFormState('openingQuantity', text)
+                  }
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+              </View>
+              <View style={styles.row}>
+                <CustomInput
+                  label="Start Date"
+                  value={formState.startDate}
+                  onChangeText={text => updateFormState('startDate', text)}
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+                <CustomInput
+                  label="Running Cost"
+                  value={formState.runningCost}
+                  onChangeText={text => updateFormState('runningCost', text)}
+                  editable={false}
+                  style={styles.disabledInput}
+                  containerStyle={styles.inputWrapper}
+                />
+              </View>
             </>
           )}
           <View style={styles.sectionTitleHeader}>
@@ -492,6 +520,14 @@ const styles = StyleSheet.create({
   activePageNumberText: {
     fontSize: 16,
     color: '#fff',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    // marginBottom: 10,
+  },
+  inputWrapper: {
+    width: '48%',
   },
 });
 

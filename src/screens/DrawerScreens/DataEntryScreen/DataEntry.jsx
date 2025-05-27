@@ -11,7 +11,7 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
 import Header from '../../../components/HeaderComp';
-import {COLORS} from '../../../theme/theme';
+import {COLORS, FONTFAMILY} from '../../../theme/theme';
 import {appStorage} from '../../../utils/services/StorageHelper';
 import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
 import {navigate} from '../../../utils/services/NavigationService';
@@ -102,6 +102,8 @@ const DataEntryScreen = () => {
             await preFetchBatchDetails(data.data.summarry, params);
           }
         });
+        console.log('Data fetched successfully:', data.data.summarry);
+
         setBatchData(data.data.summarry);
       } else {
         setResponseMessage(data?.message || 'Something went wrong');
@@ -129,62 +131,79 @@ const DataEntryScreen = () => {
     }
   }, [isFocused]);
 
-  const renderBatchItem = ({item}) => (
-    <View>
-      <TouchableOpacity
-        style={styles.accordionHeader}
-        onPress={() =>
-          setExpanded(expanded === item.lob_id ? null : item.lob_id)
-        }>
-        <Text style={styles.accordionTitle}>{item.line_of_business}</Text>
-        <Icon
-          name={expanded === item.lob_id ? 'chevron-up' : 'chevron-down'}
-          size={16}
-          color="black"
-          style={styles.icon}
-        />
-      </TouchableOpacity>
-      {expanded === item.lob_id && (
-        <View>
-          <View style={styles.tableHeader}>
-            <Text style={styles.headerText}>Batch No.</Text>
-            <Text style={styles.headerText}>Start Date</Text>
-            <Text style={styles.headerText}>Last Entry Date</Text>
-            <Text style={styles.headerText}>Status</Text>
-          </View>
-          {item.batches.map(section => (
-            <View key={section.batch_id} style={styles.tableContainer}>
-              <TouchableOpacity
-                onPress={() =>
-                  navigate('editDataEntry', {
-                    batch_id: section.batch_id,
-                  })
-                }>
-                <View style={styles.tableRow}>
-                  <Text style={styles.rowText}>{section.batch_no}</Text>
-                  <Text style={styles.rowText}>{section.start_date}</Text>
-                  <Text style={styles.rowText}>{section.last_entry_date}</Text>
-                  <Text style={styles.rowText}>{section.status}</Text>
-                  <TouchableOpacity
-                    onPress={() =>
-                      navigate('editDataEntry', {
-                        batch_id: section.batch_id,
-                      })
-                    }>
-                    <Icon
-                      name="chevron-right"
-                      size={16}
-                      color={COLORS.SecondaryColor}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
+  const renderBatchItem = ({item}) => {
+    const formatDate = dateStr => {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-'); // ["01", "Feb", "2023"]
+      if (parts.length !== 3) return dateStr;
+      const [day, month, year] = parts;
+      return `${day}/${month}/${year.slice(2)}`; // "01/Feb/23"
+    };
+
+    return (
+      <View>
+        <TouchableOpacity
+          style={styles.accordionHeader}
+          onPress={() =>
+            setExpanded(expanded === item.lob_id ? null : item.lob_id)
+          }>
+          <Text style={styles.accordionTitle}>{item.line_of_business}</Text>
+          <Icon
+            name={expanded === item.lob_id ? 'chevron-up' : 'chevron-down'}
+            size={16}
+            color="black"
+            style={styles.icon}
+          />
+        </TouchableOpacity>
+        {expanded === item.lob_id && (
+          <View>
+            <View style={styles.tableHeader}>
+              <Text style={styles.headerText}>Batch No.</Text>
+              <Text style={styles.headerText}>Start Date</Text>
+              <Text style={styles.headerText}>Last Entry Date</Text>
+              <Text style={styles.headerText}>Status</Text>
             </View>
-          ))}
-        </View>
-      )}
-    </View>
-  );
+            {item.batches.map(section => (
+              <View key={section.batch_id} style={styles.tableContainer}>
+                <TouchableOpacity
+                  onPress={() =>
+                    navigate('editDataEntry', {
+                      batch_id: section.batch_id,
+                    })
+                  }>
+                  <View style={styles.tableRow}>
+                    <Text style={styles.rowText}>
+                      {section.batch_no.slice(0, 6)}
+                    </Text>
+                    <Text style={styles.rowText}>
+                      {formatDate(section.start_date)}
+                    </Text>
+                    <Text style={styles.rowText}>
+                      {formatDate(section.last_entry_date)}
+                    </Text>
+
+                    <Text style={styles.rowText}>{section.status}</Text>
+                    <TouchableOpacity
+                      onPress={() =>
+                        navigate('editDataEntry', {
+                          batch_id: section.batch_id,
+                        })
+                      }>
+                      <Icon
+                        name="chevron-right"
+                        size={16}
+                        color={COLORS.SecondaryColor}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: '#2E313F'}}>
@@ -250,7 +269,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     position: 'relative',
   },
-  tab: {padding: 10, fontSize: 16, color: '#fff', textAlign: 'center'},
+  tab: {
+    padding: 10,
+    fontSize: 16,
+    fontFamily: FONTFAMILY.semibold,
+    color: '#fff',
+    textAlign: 'center',
+  },
   activeTab: {
     color: COLORS.SecondaryColor,
   },
@@ -270,7 +295,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 10,
   },
-  accordionTitle: {fontSize: 18, fontWeight: 'bold'},
+  accordionTitle: {fontSize: 18, fontFamily: FONTFAMILY.bold},
   icon: {marginLeft: 10},
   tableContainer: {
     marginTop: 10,
@@ -282,7 +307,7 @@ const styles = StyleSheet.create({
     padding: 10,
     justifyContent: 'space-between',
   },
-  headerText: {fontWeight: 'bold', flex: 1, textAlign: 'center'},
+  headerText: {fontFamily: FONTFAMILY.bold, flex: 1, textAlign: 'center'},
   tableRow: {
     flexDirection: 'row',
     padding: 10,
@@ -291,7 +316,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  rowText: {flex: 1, textAlign: 'center'},
+  rowText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: FONTFAMILY.regular,
+    textAlign: 'center',
+  },
   flatListContainer: {
     flexGrow: 1,
   },
