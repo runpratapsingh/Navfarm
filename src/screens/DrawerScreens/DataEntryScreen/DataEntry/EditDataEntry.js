@@ -74,6 +74,7 @@ const EditDataEntry = ({route}) => {
   const [modalType, setModalType] = useState('error');
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({});
+  const [loadingType, setLoadingType] = useState(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToNetworkChanges(isConnected => {
@@ -135,7 +136,7 @@ const EditDataEntry = ({route}) => {
   const handleSubmit = async status => {
     try {
       setLoading(true);
-
+      setLoadingType(type);
       // Validation checks header
       if (!formState.nob_id) {
         setModalType('error');
@@ -366,6 +367,7 @@ const EditDataEntry = ({route}) => {
       setVisible(true);
     } finally {
       setLoading(false);
+      setLoadingType(null);
     }
   };
 
@@ -919,13 +921,17 @@ const EditDataEntry = ({route}) => {
             style={styles.button}
             onPress={() => handleSubmit('draft')}
             disabled={loading}>
-            <Text style={styles.buttonText}>{loading ? 'Saving' : 'Save'}</Text>
+            <Text style={styles.buttonText}>
+              {loadingType === 'draft' ? 'Saving...' : 'Save'}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.button}
             onPress={() => handleSubmit('posted')}
             disabled={loading}>
-            <Text style={styles.buttonText}>Post</Text>
+            <Text style={styles.buttonText}>
+              {loadingType === 'posted' ? 'Posting...' : 'Post'}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

@@ -26,7 +26,7 @@ function DrawerNavigation() {
         }}
         initialRouteName="BottomNavigation"
         drawerContent={props => <CustomDrawerContent {...props} />}>
-        <Drawer.Screen
+        {/* <Drawer.Screen
           name="Dashboard"
           options={{
             drawerItemStyle: {
@@ -113,7 +113,7 @@ function DrawerNavigation() {
             headerShown: false,
           }}
           component={BatchCreation}
-        />
+        /> */}
         <Drawer.Screen
           name="BottomNavigation"
           options={{

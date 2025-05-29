@@ -114,6 +114,7 @@ const CategorySelection = () => {
     );
     return () => backHandler.remove(); // Cleanup listener
   }, [navigation]);
+
   const getDashboardData = async () => {
     try {
       setLoading(true);
@@ -137,13 +138,6 @@ const CategorySelection = () => {
         return;
       }
 
-      // const response = await api.get(API_ENDPOINTS.Dashboard_NOB, {
-      //   params: {
-      //     Company_Id: userData.companY_ID,
-      //     nature_id: commonDetailsData.naturE_ID,
-      //   },
-      // });
-
       const params = {
         Company_Id: userData.companY_ID,
         nature_id: commonDetailsData.naturE_ID,
@@ -151,22 +145,34 @@ const CategorySelection = () => {
 
       const response = await fetchData(API_ENDPOINTS.Dashboard_NOB, params);
 
-      const nobData = response.data.nob;
-      const filteredNobData = nobData.filter(item => item.selected);
+      console.log('API Response:009090', response);
+      if (response.status === 'success') {
+        const nobData = response.data.nob;
+        const filteredNobData = nobData.filter(item => item.selected);
 
-      // Map filteredNobData to the structure of initialData
-      const updatedData = filteredNobData.map(item => {
-        const key = item.text.toLowerCase(); // Assuming 'text' in filteredNobData matches 'label' in initialData
-        return {
-          key: key,
-          label: item.text,
-          image: requireImage[key],
-          value: item.value,
-          selected: item.selected,
-        };
-      });
+        // Map filteredNobData to the structure of initialData
+        const updatedData = filteredNobData.map(item => {
+          const key = item.text.toLowerCase(); // Assuming 'text' in filteredNobData matches 'label' in initialData
+          return {
+            key: key,
+            label: item.text,
+            image: requireImage[key],
+            value: item.value,
+            selected: item.selected,
+          };
+        });
 
-      setData(updatedData);
+        setData(updatedData);
+      } else {
+        console.error('API Error:', response.message);
+        setModalVisible(true); // Show modal on API error
+        setTitle('Error');
+        setMessage(
+          response.message ||
+            'Failed to fetch data please check internet connection',
+        );
+        setButtonText('OK');
+      }
     } catch (error) {
       console.error('API Error:', error);
       throw error;

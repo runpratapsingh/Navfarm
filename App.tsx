@@ -6,7 +6,13 @@
  */
 
 import React, {useEffect} from 'react';
-import {PermissionsAndroid, Platform, StyleSheet, Text} from 'react-native';
+import {
+  PermissionsAndroid,
+  Platform,
+  StyleSheet,
+  Text,
+  useColorScheme,
+} from 'react-native';
 import MyStack from './src/navigation/stackNavigator';
 import {NavigationContainer} from '@react-navigation/native';
 import {navigationRef} from './src/utils/services/NavigationService';
@@ -34,6 +40,9 @@ function App(): React.JSX.Element {
     };
     initializeDatabases();
   }, []);
+
+  const theme = useColorScheme(); // 'dark' or 'light'
+  console.log('Current theme:', theme);
 
   const requestUserPermission = async () => {
     try {
