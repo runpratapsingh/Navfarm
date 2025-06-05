@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    height: 45,
+    height: 40,
   },
   selectedStyle: {
     display: 'none',

@@ -23,7 +23,7 @@ const CustomInput = ({
         //   style,
         // ]}
         style={{
-          fontSize: 12, // affects both placeholder and user input
+          fontSize: 13, // affects both placeholder and user input
           color: 'black',
           height: 35,
           fontFamily: FONTFAMILY.regular,
@@ -37,6 +37,24 @@ const CustomInput = ({
         outlineColor="#999999" // Gray border when not focused
         outlineStyle={{borderWidth: 1}}
         activeOutlineColor="#000000" // Blue border on focus
+        theme={{
+          fonts: {
+            labelMedium: {
+              fontFamily: FONTFAMILY.regular,
+              letterSpacing: 0.5,
+              fontWeight: '400',
+              lineHeight: 20,
+              fontSize: 17,
+            },
+            bodyLarge: {
+              fontFamily: FONTFAMILY.regular,
+              letterSpacing: 0.5,
+              fontWeight: '400',
+              lineHeight: 24,
+              fontSize: 16,
+            },
+          },
+        }}
         {...props} // Spread the rest of the props here
       />
     </View>

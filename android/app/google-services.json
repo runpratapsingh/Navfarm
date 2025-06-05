@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "574144549616",
-    "project_id": "navfarm-4018b",
-    "storage_bucket": "navfarm-4018b.firebasestorage.app"
+    "project_number": "468809534342",
+    "project_id": "navfarm-3e57e",
+    "storage_bucket": "navfarm-3e57e.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:574144549616:android:62eef1ddffafc457a76835",
+        "mobilesdk_app_id": "1:468809534342:android:ef9022d577ed1708a83a07",
         "android_client_info": {
           "package_name": "com.navfarm"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyA7YNAANAVj_GUusZga3yhYIbV52-a0epU"
+          "current_key": "AIzaSyD18uJBdBqldgqYIHrRPXRVteeozx3I4Mg"
         }
       ],
       "services": {

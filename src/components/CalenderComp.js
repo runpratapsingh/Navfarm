@@ -3,7 +3,7 @@ import {View, Modal, StyleSheet, TouchableOpacity, Text} from 'react-native';
 import {Calendar} from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {TextInput} from 'react-native';
-import {COLORS} from '../theme/theme';
+import {COLORS, FONTFAMILY} from '../theme/theme';
 
 // Calendar Component
 const CalendarComponent = ({
@@ -16,7 +16,10 @@ const CalendarComponent = ({
 
   return (
     <>
-      <Text style={{fontSize: 14, color: '#555'}}>Posting Date</Text>
+      <Text
+        style={{fontSize: 14, color: '#555', fontFamily: FONTFAMILY.regular}}>
+        Posting Date
+      </Text>
       <TouchableOpacity
         style={styles.inputWithIcon}
         onPress={() => setCalendarVisible(true)}>
@@ -26,7 +29,7 @@ const CalendarComponent = ({
           value={postingDate}
           editable={false}
         />
-        <Icon name="calendar" size={20} color="#000" style={styles.icon} />
+        <Icon name="calendar" size={15} color="#000" style={styles.icon} />
       </TouchableOpacity>
 
       {/* Calendar Modal */}
@@ -76,10 +79,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 5,
     marginVertical: 5,
+    height: 40,
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
+    fontFamily: FONTFAMILY.regular,
   },
   icon: {
     marginLeft: 10,
@@ -91,11 +96,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '100%',
+    width: '93%',
     backgroundColor: 'white',
     borderRadius: 10,
     marginHorizontal: 10,
-    padding: 20,
+    paddingBottom: 10,
     alignItems: 'center',
   },
   closeButton: {
@@ -107,6 +112,7 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontFamily: FONTFAMILY.regular,
   },
 });
 

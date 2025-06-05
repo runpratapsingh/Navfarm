@@ -6,23 +6,14 @@
  */
 
 import React, {useEffect} from 'react';
-import {
-  PermissionsAndroid,
-  Platform,
-  StyleSheet,
-  Text,
-  useColorScheme,
-} from 'react-native';
+import {PermissionsAndroid, Platform, StyleSheet} from 'react-native';
 import MyStack from './src/navigation/stackNavigator';
 import {NavigationContainer} from '@react-navigation/native';
 import {navigationRef} from './src/utils/services/NavigationService';
-import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import messaging from '@react-native-firebase/messaging';
 import notifee from '@notifee/react-native';
-import {
-  cacheApiResponse,
-  initDatabase,
-} from './src/services/OfflineServices/Database';
+import {initDatabase} from './src/services/OfflineServices/Database';
 import {initDatabaseForDataEntry} from './src/services/OfflineServices/DataentryOfflineDB';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {onDisplayNotification} from './src/services/NotificationServices/Notification';
@@ -40,9 +31,6 @@ function App(): React.JSX.Element {
     };
     initializeDatabases();
   }, []);
-
-  const theme = useColorScheme(); // 'dark' or 'light'
-  console.log('Current theme:', theme);
 
   const requestUserPermission = async () => {
     try {

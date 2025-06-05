@@ -442,9 +442,9 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 14,
     marginBottom: 5,
-    fontFamily: FONTFAMILY.extraBold,
+    fontFamily: FONTFAMILY.semibold,
   },
   cardValue: {
     color: '#000',

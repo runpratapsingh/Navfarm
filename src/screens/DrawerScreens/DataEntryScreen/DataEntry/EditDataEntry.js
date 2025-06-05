@@ -37,6 +37,7 @@ import {
   markAsSyncedForDataEntry,
 } from '../../../../services/OfflineServices/DataentryOfflineDB';
 import api from '../../../../Apiconfig/ApiconfigWithInterceptor';
+import Loader from '../../../../components/LoaderComponent';
 
 const EditDataEntry = ({route}) => {
   const {batch_id} = route.params;
@@ -69,6 +70,7 @@ const EditDataEntry = ({route}) => {
   const [lineData, setLineData] = useState([]);
   const [groupedData, setGroupedData] = useState({});
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setpageLoading] = useState(false);
   const [visible, setVisible] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
   const [modalType, setModalType] = useState('error');
@@ -136,7 +138,7 @@ const EditDataEntry = ({route}) => {
   const handleSubmit = async status => {
     try {
       setLoading(true);
-      setLoadingType(type);
+      setLoadingType(status);
       // Validation checks header
       if (!formState.nob_id) {
         setModalType('error');
@@ -447,6 +449,7 @@ const EditDataEntry = ({route}) => {
   };
 
   const getDataEntryDetails = async () => {
+    setpageLoading(true);
     try {
       const userDataString = await appStorage.getUserData();
       const commonDetails = await appStorage.getCommonDetails();
@@ -587,6 +590,11 @@ const EditDataEntry = ({route}) => {
       }
     } catch (error) {
       console.error('Error fetching batch details:', error.message);
+      setResponseMessage(response.message || 'Failed to load batch details');
+      setModalType('error');
+      setVisible(true);
+    } finally {
+      setpageLoading(false);
     }
   };
 
@@ -719,6 +727,7 @@ const EditDataEntry = ({route}) => {
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: '#2E313F'}}>
       <StatusBar barStyle="light-content" backgroundColor="#2E313F" />
+      <Loader visible={pageLoading} />
       <HeaderWithBtn title="Data Entry" />
       <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
         <TouchableOpacity
@@ -863,7 +872,7 @@ const EditDataEntry = ({route}) => {
               label="Remark"
               value={formState.Remark}
               onChangeText={text => updateFormState('Remark', text)}
-              multiline
+              // multiline
               numberOfLines={4}
               placeholder="Enter your remark here..."
             />
