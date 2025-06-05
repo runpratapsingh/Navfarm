@@ -204,6 +204,10 @@ const SignInScreen = () => {
                       borderWidth: 1,
                       borderColor: '#ddd',
                       borderRadius: 5,
+                      input: {
+                        fontSize: 16,
+                        fontFamily: FONTFAMILY.regular,
+                      },
                     },
                   }}
                 />

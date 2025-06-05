@@ -55,5 +55,12 @@
 		<string>BalooThambi2-Regular.ttf</string>
 		<string>BalooThambi2-SemiBold.ttf</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+        <string>We need your location to provide relevant services.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+        <string>We need your location to provide relevant services even when the app is in the background.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+        <string>We need your location to provide relevant services.</string>
+
 </dict>
 </plist>

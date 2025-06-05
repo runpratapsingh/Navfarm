@@ -1,12 +1,5 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React, {useEffect} from 'react';
-import {PermissionsAndroid, Platform, StyleSheet} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {Alert, PermissionsAndroid, Platform, StyleSheet} from 'react-native';
 import MyStack from './src/navigation/stackNavigator';
 import {NavigationContainer} from '@react-navigation/native';
 import {navigationRef} from './src/utils/services/NavigationService';
@@ -17,8 +10,12 @@ import {initDatabase} from './src/services/OfflineServices/Database';
 import {initDatabaseForDataEntry} from './src/services/OfflineServices/DataentryOfflineDB';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {onDisplayNotification} from './src/services/NotificationServices/Notification';
+import Geolocation from 'react-native-geolocation-service';
 
 function App(): React.JSX.Element {
+  const [notificationPermissionGranted, setNotificationPermissionGranted] =
+    useState(false);
+
   useEffect(() => {
     // Initialize databases sequentially to avoid conflicts
     const initializeDatabases = async () => {
@@ -42,11 +39,7 @@ function App(): React.JSX.Element {
           await messaging().requestPermission();
         }
 
-        console.log(
-          'djadjkagfjakgfagfahsgfhf Permission Auth',
-          permissionGranted,
-          authStatus1,
-        );
+        console.log('Permission Auth', permissionGranted, authStatus1);
 
         messaging()
           .getAPNSToken()
@@ -77,8 +70,9 @@ function App(): React.JSX.Element {
               const token = await messaging().getToken();
               console.log('FCM token (iOS):', token);
               await AsyncStorage.setItem('fcmToken', token);
+              setNotificationPermissionGranted(true);
             } catch (error) {
-              console.log('Yyyyyyyyyyyyyyyy', error);
+              console.log('Error:', error);
             }
           } else {
             console.log('iOS Notification permissions not granted.');
@@ -104,6 +98,7 @@ function App(): React.JSX.Element {
             const token = await messaging().getToken();
             console.log('FCM token (Android):', token);
             await AsyncStorage.setItem('fcmToken', token);
+            setNotificationPermissionGranted(true);
           } else {
             console.log('Android Notification permissions not granted.');
           }
@@ -120,9 +115,62 @@ function App(): React.JSX.Element {
     requestUserPermission();
   }, []);
 
+  // Function to request location permission
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Permission',
+            message: 'Navfarm needs access to your location.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          getCurrentLocation();
+        } else {
+          Alert.alert('Permission Denied', 'Location permission is required.');
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    } else {
+      // iOS permission request
+      const status = await Geolocation.requestAuthorization('whenInUse');
+      if (status === 'granted') {
+        getCurrentLocation();
+      } else {
+        Alert.alert('Permission Denied', 'Location permission is required.');
+      }
+    }
+  };
+
+  // Function to get current location
+  const getCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      position => {
+        const {latitude, longitude} = position.coords;
+        console.log('Latitude:', latitude, 'Longitude:', longitude);
+      },
+      error => {
+        console.log(error.code, error.message);
+        Alert.alert('Error', `Failed to get location: ${error.message}`);
+      },
+      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+    );
+  };
+
+  useEffect(() => {
+    if (notificationPermissionGranted) {
+      requestLocationPermission();
+    }
+  }, [notificationPermissionGranted]);
+
   useEffect(() => {
     if (Platform.OS === 'ios') {
-      // return;
       const unsubscribeIos = messaging().onMessage(async remoteMessage => {
         console.log('Foreground FCM message (iOS):', remoteMessage);
         await onDisplayNotification(
