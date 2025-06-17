@@ -28,7 +28,13 @@ const CustomDropdown = ({
           }}
           placeholderStyle={{color: '#555', fontFamily: FONTFAMILY.regular}}
           valueField="id"
-          placeholder="Select"
+          placeholder={
+            selectedValue.length > 0
+              ? `${selectedValue.length} batch${
+                  selectedValue.length > 1 ? 's' : ''
+                } selected`
+              : 'Select'
+          }
           value={selectedValue} // array of ids
           onChange={onValueChange}
           selectedStyle={styles.selectedStyle}
@@ -83,9 +89,8 @@ const styles = StyleSheet.create({
   },
   selectedStyle: {
     display: 'none',
-    borderRadius: 12,
+    borderRadius: 8,
     backgroundColor: COLORS.SecondaryColor + '20',
     padding: 5,
-    margin: 2,
   },
 });

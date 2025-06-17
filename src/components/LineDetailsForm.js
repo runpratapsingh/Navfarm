@@ -7,14 +7,16 @@ import CustomDropdown from './DataEntryHistoryCustumDropdown';
 
 const LineDetailsComponent = ({
   groupedData,
-  expandedGroups,
-  toggleGroup,
+  expandedBatches,
+  expandedParameters,
+  toggleBatch,
+  toggleParameter,
   updateGroupedData,
   handleEyePress,
 }) => {
-  const renderLineItem = ({item, index}) => {
-    const decimalRegex = /^\d*\.?\d{0,3}$/;
+  const decimalRegex = /^\d*\.?\d{0,3}$/;
 
+  const renderLineItem = ({item, index}, batchNo, type) => {
     return (
       <View style={styles.section} key={index}>
         <View style={styles.textParameterNameContainer}>
@@ -26,12 +28,7 @@ const LineDetailsComponent = ({
             value={item.actuaL_VALUE?.toString()}
             onChangeText={text => {
               if (decimalRegex.test(text)) {
-                updateGroupedData(
-                  item.parameteR_TYPE,
-                  index,
-                  'actuaL_VALUE',
-                  text,
-                );
+                updateGroupedData(batchNo, type, index, 'actuaL_VALUE', text);
               }
             }}
             keyboardType="numeric"
@@ -42,12 +39,7 @@ const LineDetailsComponent = ({
             value={item.uniT_COST?.toString()}
             onChangeText={text => {
               if (decimalRegex.test(text)) {
-                updateGroupedData(
-                  item.parameteR_TYPE,
-                  index,
-                  'uniT_COST',
-                  text,
-                );
+                updateGroupedData(batchNo, type, index, 'uniT_COST', text);
               }
             }}
             editable={item.parameteR_NAME === 'Descriptive' ? false : true}
@@ -60,14 +52,15 @@ const LineDetailsComponent = ({
           </View>
         </View>
         <View style={styles.row}>
-          {item.parameteR_TYPE == 'Descriptive' ? (
-            item.parameter_input_type == 'input' ? (
+          {item.parameteR_TYPE === 'Descriptive' ? (
+            item.parameter_input_type === 'input' ? (
               <CustomInput
                 label="Descriptive"
                 value={item.parameter_input_value}
                 onChangeText={text =>
                   updateGroupedData(
-                    item.parameteR_TYPE,
+                    batchNo,
+                    type,
                     index,
                     'parameter_input_value',
                     text,
@@ -76,13 +69,14 @@ const LineDetailsComponent = ({
                 placeholder="Enter descriptive value"
                 containerStyle={{width: '100%'}}
               />
-            ) : item.parameteR_TYPE == 'Descriptive' ? (
+            ) : item.parameter_input_type === 'dropdown' ? (
               <CustomDropdown
                 label="Descriptive"
                 selectedValue={item.parameter_input_value}
                 onValueChange={text =>
                   updateGroupedData(
-                    item.parameteR_TYPE,
+                    batchNo,
+                    type,
                     index,
                     'parameter_input_value',
                     text,
@@ -103,27 +97,48 @@ const LineDetailsComponent = ({
     );
   };
 
+  const renderParameterType = (batchNo, type, data) => (
+    <View key={`${batchNo}-${type}`} style={styles.parameterSection}>
+      <TouchableOpacity
+        onPress={() => toggleParameter(batchNo, type)}
+        style={styles.sectionTitleHeader}>
+        <Text style={styles.sectionTitle1}>{type}</Text>
+        <Icon
+          name={expandedParameters[`${batchNo}-${type}`] ? 'minus' : 'plus'}
+          size={20}
+          color={COLORS.primaryColor}
+        />
+      </TouchableOpacity>
+      {expandedParameters[`${batchNo}-${type}`] && (
+        <FlatList
+          data={data}
+          renderItem={({item, index}) =>
+            renderLineItem({item, index}, batchNo, type)
+          }
+          keyExtractor={(item, index) => `${batchNo}-${type}-${index}`}
+        />
+      )}
+    </View>
+  );
+
   return (
     <View style={styles.lineDetail}>
-      {Object.keys(groupedData).map(group => (
-        <View key={group} style={styles.section1}>
+      {groupedData.map(batch => (
+        <View key={batch.batchNo} style={styles.section1}>
           <TouchableOpacity
-            onPress={() => toggleGroup(group)}
+            onPress={() => toggleBatch(batch.batchNo)}
             style={styles.sectionTitleHeader}>
-            <Text style={styles.sectionTitle1}>{group}</Text>
+            <Text style={styles.sectionTitle1}>{batch.batchNo}</Text>
             <Icon
-              name={expandedGroups[group] ? 'minus' : 'plus'}
+              name={expandedBatches[batch.batchNo] ? 'minus' : 'plus'}
               size={20}
               color={COLORS.primaryColor}
             />
           </TouchableOpacity>
-          {expandedGroups[group] && (
-            <FlatList
-              data={groupedData[group]}
-              renderItem={renderLineItem}
-              keyExtractor={(item, index) => index.toString()}
-            />
-          )}
+          {expandedBatches[batch.batchNo] &&
+            Object.keys(batch.LineData).map(type =>
+              renderParameterType(batch.batchNo, type, batch.LineData[type]),
+            )}
         </View>
       ))}
     </View>
@@ -132,14 +147,23 @@ const LineDetailsComponent = ({
 
 const styles = StyleSheet.create({
   lineDetail: {
-    marginBottom: 20,
-    padding: 16,
+    paddingTop: 16,
   },
-  section: {},
+  section: {
+    marginBottom: 10,
+  },
   section1: {
     marginBottom: 20,
     borderBottomColor: '#ddd',
     borderBottomWidth: 1,
+  },
+  parameterSection: {
+    marginLeft: 5,
+    // backgroundColor: 'red',
+    marginBottom: 5,
+    borderTopColor: '#ddd',
+    borderTopWidth: 1,
+    paddingTop: 5,
   },
   sectionTitle: {
     fontSize: 14,

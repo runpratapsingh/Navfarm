@@ -284,7 +284,7 @@ const EditDataEntry = ({route}) => {
         livestock: [],
       };
 
-      console.log('Saving data:', updatedData, {
+      console.log('Saving data:----------', updatedData, {
         BATCH_ID: batch_id?.toString(),
         BATCH_NO: formState.batch_No,
       });

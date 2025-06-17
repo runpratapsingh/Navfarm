@@ -14,14 +14,7 @@ const CustomInput = ({
 }) => {
   return (
     <View style={[styles.inputContainer, containerStyle]}>
-      {/* <Text style={styles.label}>{label}</Text> */}
       <TextInput
-        // style={[
-        //   styles.input,
-        //   props.multiline && styles.multilineInput,
-        //   !editable && styles.disabledInput,
-        //   style,
-        // ]}
         style={{
           fontSize: 13, // affects both placeholder and user input
           color: 'black',

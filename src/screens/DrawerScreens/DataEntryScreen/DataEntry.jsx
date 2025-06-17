@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   },
   accordionTitle: {
     fontSize: 18,
-    fontFamily: FONTFAMILY.bold
+    fontFamily: FONTFAMILY.bold,
   },
   icon: {marginLeft: 10},
   tableContainer: {
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontFamily: FONTFAMILY.bold,
     flex: 1,
-    textAlign: 'center'
+    textAlign: 'center',
   },
   tableRow: {
     flexDirection: 'row',

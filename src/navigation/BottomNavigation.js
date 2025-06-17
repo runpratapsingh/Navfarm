@@ -15,38 +15,24 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import {COLORS, FONTFAMILY} from '../theme/theme';
+import {useTab} from '../hooks/TabContext';
 import DashboardScreen from '../screens/DrawerScreens/DashBoard/Dashboard';
 import DataEntryScreen from '../screens/DrawerScreens/DataEntryScreen/DataEntry';
 import BatchCreation from '../screens/DrawerScreens/DailyDataEntryScreen/DailyDataEntry';
 import HomeScreen from '../screens/DrawerScreens/Home/HomeScreen';
-import {useTab} from '../hooks/TabContext';
 
-// Placeholder screen components for lazy loading
-const DashBoardScreen = () => <DashboardScreen />;
-
-const Data_EntryScreen = () => <DataEntryScreen />;
-
-const BatchCreationScreen = () => <BatchCreation />;
-
-const CategoryScreen = () => <HomeScreen />;
-
-// Map tabs to their screens
-// Map tabs to their screens
 const screenMap = {
-  Dashboard: DashBoardScreen,
-  DataEntry: Data_EntryScreen,
-  'Daily Data Entry': BatchCreationScreen,
-  Categories: CategoryScreen,
+  Dashboard: DashboardScreen,
+  DataEntry: DataEntryScreen,
+  'Daily Data Entry': BatchCreation,
+  Categories: HomeScreen,
 };
 
-// TabItem component
 const TabItem = React.memo(({tab, isActive, onPress}) => {
-  // Animation for icon and text
   const scale = useSharedValue(isActive ? 1.1 : 1);
   const opacity = useSharedValue(isActive ? 1 : 0.7);
 
-  // Update animation values when isActive changes
-  React.useEffect(() => {
+  useEffect(() => {
     scale.value = withTiming(isActive ? 1.1 : 1, {duration: 200});
     opacity.value = withTiming(isActive ? 1 : 0.7, {duration: 200});
   }, [isActive, scale, opacity]);
@@ -70,7 +56,6 @@ const TabItem = React.memo(({tab, isActive, onPress}) => {
             color={isActive ? COLORS.SecondaryColor : '#000'}
           />
         </View>
-
         <Text style={[styles.tabText, isActive && styles.activeTabText]}>
           {tab.name}
         </Text>
@@ -79,13 +64,13 @@ const TabItem = React.memo(({tab, isActive, onPress}) => {
   );
 });
 
-const BottomNavigation = () => {
+const BottomNavigation = ({route}) => {
+  const {activeTab: routeActiveTab} = route.params || {};
   const {activeTab, setActiveTab} = useTab();
   const insets = useSafeAreaInsets();
   const {width} = Dimensions.get('window');
-  const tabWidth = width / 4; // Assuming 4 tabs
+  const tabWidth = width / 4;
 
-  // Animation for sliding underline
   const translateX = useSharedValue(0);
 
   const tabs = [
@@ -95,7 +80,12 @@ const BottomNavigation = () => {
     {name: 'Categories', icon: 'layer-group'},
   ];
 
-  // Handle tab press with animation
+  useEffect(() => {
+    if (routeActiveTab && routeActiveTab !== activeTab) {
+      setActiveTab(routeActiveTab);
+    }
+  }, [routeActiveTab]); // Only re-run the effect if routeActiveTab changes
+
   const handleTabPress = useCallback(
     (tabName, index) => {
       if (tabName !== activeTab) {
@@ -106,7 +96,6 @@ const BottomNavigation = () => {
     [activeTab, setActiveTab, translateX, tabWidth],
   );
 
-  // Update translateX when activeTab changes
   useEffect(() => {
     const index = tabs.findIndex(tab => tab.name === activeTab);
     if (index !== -1) {
@@ -114,13 +103,11 @@ const BottomNavigation = () => {
     }
   }, [activeTab, translateX, tabWidth]);
 
-  // Animated style for sliding underline
   const animatedUnderlineStyle = useAnimatedStyle(() => ({
     transform: [{translateX: translateX.value}],
     width: tabWidth,
   }));
 
-  // Lazy load content
   const renderContent = () => {
     const ActiveScreen = screenMap[activeTab];
     return ActiveScreen ? (
@@ -137,7 +124,7 @@ const BottomNavigation = () => {
       <View style={styles.container}>
         <StatusBar
           backgroundColor={COLORS.primaryColor}
-          barStyle={'light-content'}
+          barStyle="light-content"
         />
         {renderContent()}
         <View style={[styles.bottomNavigation]}>
