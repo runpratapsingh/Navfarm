@@ -115,7 +115,6 @@ function App(): React.JSX.Element {
     requestUserPermission();
   }, []);
 
-  // Function to request location permission
   const requestLocationPermission = async () => {
     if (Platform.OS === 'android') {
       try {
@@ -148,7 +147,6 @@ function App(): React.JSX.Element {
     }
   };
 
-  // Function to get current location
   const getCurrentLocation = () => {
     Geolocation.getCurrentPosition(
       position => {

@@ -13,13 +13,12 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {requireImage} from '../../../utils/JSON/Images';
 import api from '../../../Apiconfig/ApiconfigWithInterceptor';
 import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
-import {navigate} from '../../../utils/services/NavigationService';
 import {appStorage} from '../../../utils/services/StorageHelper';
-import {useIsFocused, useNavigation} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import Header from '../../../components/HeaderComp';
 import {useTab} from '../../../hooks/TabContext';
 import {COLORS} from '../../../theme/theme';

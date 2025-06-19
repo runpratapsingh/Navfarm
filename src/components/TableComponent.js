@@ -9,6 +9,8 @@ import {
 import {COLORS, FONTFAMILY} from '../theme/theme';
 
 const TableComponent = ({data}) => {
+  console.log('shjhfjkshfkjahfjkasf', data);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({
     key: null,

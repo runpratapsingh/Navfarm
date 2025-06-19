@@ -16,10 +16,10 @@ import CustomDropdown from '../../../components/DataEntryHistoryCustumDropdown';
 import Header from '../../../components/HeaderComp';
 import {useNavigation} from '@react-navigation/native';
 import {COLORS} from '../../../theme/theme';
-import DataEntryAddLine from '../DataEntryScreen/DataEntry/DataEntry_AddLine';
 import {FONTFAMILY} from '../../../theme/theme';
 import StatusModal from '../../../components/CustumModal';
 import TableComponent from '../../../components/TableComponent';
+import DynamicBatchComparisonChart from '../../../components/Batch_Chart';
 const {width} = Dimensions.get('window');
 
 const BatchComparison = () => {
@@ -27,15 +27,11 @@ const BatchComparison = () => {
   const [line, setLine] = useState('');
   const [batch, setBatch] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [loading, setLoading] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
   const [modalType, setModalType] = useState('');
   const [visible, setVisible] = useState(false);
-  const [groupedData, setGroupedData] = useState({});
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [isbatchIdVisible, setisbatchIdVisible] = useState(false);
-  const [expandedBatches, setExpandedBatches] = useState({});
-  const [expandedParameters, setExpandedParameters] = useState({});
+
   const [natureOptions, setNatureOptions] = useState([]);
   const [lineOptions, setLineOptions] = useState([]);
   const [batchOptions, setBatchOptions] = useState([]);
@@ -44,7 +40,6 @@ const BatchComparison = () => {
   const [loadingLine, setLoadingLine] = useState(false);
   const [loadingBatch, setLoadingBatch] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
-  const [loadingType, setLoadingType] = useState(null);
   const [loadingSearchedData, setLoadingSearchedData] = useState(false);
   const [errorVisible, setErrorVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -55,6 +50,8 @@ const BatchComparison = () => {
   const [toDate, setToDate] = useState('');
   const [showFromCalendar, setShowFromCalendar] = useState(false);
   const [showToCalendar, setShowToCalendar] = useState(false);
+
+  const [isTableView, setIsTableView] = useState(true);
 
   const navigation = useNavigation();
 
@@ -380,7 +377,42 @@ const BatchComparison = () => {
 
         {isFormVisible && (
           <>
-            <TableComponent data={data} />
+            <View style={styles.toggleContainer}>
+              <TouchableOpacity
+                onPress={() => setIsTableView(true)}
+                style={[
+                  styles.toggleOption,
+                  isTableView && styles.activeToggleOption,
+                ]}>
+                <Text
+                  style={[
+                    styles.toggleText,
+                    isTableView && styles.activeToggleText,
+                  ]}>
+                  📋 Table View
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setIsTableView(false)}
+                style={[
+                  styles.toggleOption,
+                  !isTableView && styles.activeToggleOption,
+                ]}>
+                <Text
+                  style={[
+                    styles.toggleText,
+                    !isTableView && styles.activeToggleText,
+                  ]}>
+                  📊 Chart View
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {isTableView ? (
+              <TableComponent data={data} />
+            ) : (
+              <DynamicBatchComparisonChart batches={data} />
+            )}
           </>
         )}
       </ScrollView>
@@ -475,6 +507,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     fontFamily: FONTFAMILY.regular,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#E0E0E0',
+    borderRadius: 30,
+    padding: 4,
+    alignSelf: 'center',
+    marginTop: 20,
+  },
+  toggleOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+  },
+  activeToggleOption: {
+    backgroundColor: COLORS.SecondaryColor,
+  },
+  toggleText: {
+    fontFamily: FONTFAMILY.regular,
+    color: '#333',
+    fontSize: 14,
+  },
+  activeToggleText: {
+    color: '#FFF',
+    fontFamily: FONTFAMILY.semibold,
   },
 });
 

@@ -24,6 +24,7 @@ import ConfirmLogoutAndExitModal from '../../components/ExitAndLogoutModalComp';
 import {useNavigation} from '@react-navigation/native';
 import {fetchData} from '../../services/ApiServices/Apiservice';
 import {FONTFAMILY} from '../../theme/theme';
+import Loader from '../../components/LoaderComponent';
 
 const initialData = [
   {key: 'poultry', label: 'Poultry', image: requireImage.poultry},
@@ -195,6 +196,7 @@ const CategorySelection = () => {
   return (
     <SafeAreaView style={{flex: 1}}>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
+      <Loader visible={loading} />
       <View style={styles.container}>
         {!loading && (
           <FlatList
