@@ -8,7 +8,7 @@ const Loader = ({visible}) => {
   return (
     <View style={styles.loaderContainer}>
       <LottieView
-        source={require('./lottie.json')}
+        source={require('../utils/JSON/lottie.json')}
         autoPlay
         loop
         style={styles.lottie}
