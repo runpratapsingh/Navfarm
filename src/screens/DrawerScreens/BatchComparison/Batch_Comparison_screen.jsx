@@ -324,7 +324,7 @@ const BatchComparison = () => {
             <View style={styles.modalView}>
               <Calendar
                 style={{
-                  width: width * 0.8,
+                  width: width * 0.85,
                 }}
                 theme={{
                   arrowColor: COLORS.SecondaryColor,

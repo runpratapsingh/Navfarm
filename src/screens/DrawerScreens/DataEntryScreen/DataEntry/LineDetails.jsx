@@ -35,11 +35,11 @@ const LineDetailScreen = ({route}) => {
             value={lineItem.costPerUnit?.toString() || ''}
             editable={false}
           /> */}
-            <CustomInput
+            {/* <CustomInput
               label="Data Entry Type"
               value={lineItem.dataentrY_TYPE || ''}
               editable={false}
-            />
+            /> */}
             <CustomInput
               label="Item Name"
               value={lineItem.iteM_NAME || ''}

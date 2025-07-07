@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 18,
     fontFamily: FONTFAMILY.bold,
-    color: COLORS.SecondaryColor
+    color: COLORS.SecondaryColor,
   },
   dropdown: {
     height: 50,
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   tableHeaderText: {
     fontFamily: FONTFAMILY.bold,
     width: 100,
-    textAlign: 'center'
+    textAlign: 'center',
   },
   tableRow: {
     flexDirection: 'row',

@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 // import {PieChart} from 'react-native-chart-kit';
-import {PieChart} from 'react-native-gifted-charts';
+import {BarChart, LineChart, PieChart} from 'react-native-gifted-charts';
 
 import Header from '../../../components/HeaderComp';
 import {useNavigation} from '@react-navigation/native';
@@ -24,7 +24,8 @@ import {appStorage} from '../../../utils/services/StorageHelper';
 import {API_ENDPOINTS} from '../../../Apiconfig/Apiconfig';
 import {CHART_COLORS} from '../../../utils/JSON/ChartColors';
 import {fetchData} from '../../../services/ApiServices/Apiservice';
-import {FONTFAMILY} from '../../../theme/theme';
+import {COLORS, FONTFAMILY} from '../../../theme/theme';
+import CustomDropdown from '../../../components/DataEntryHistoryCustumDropdown';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -87,6 +88,34 @@ const Legend = ({data, onLegendPress}) => (
   </View>
 );
 
+// Function to determine which abbreviations are used in the chart data
+const determineUsedAbbreviations = data => {
+  let hasK = false,
+    hasM = false,
+    hasB = false;
+
+  console.log('Data for abbreviation check:', data);
+
+  data.forEach(item => {
+    const value = item.value;
+
+    if (value >= 1_000_000_000) hasB = true;
+    else if (value >= 1_000_000) hasM = true;
+    else if (value >= 1_000) hasK = true;
+  });
+
+  return {hasK, hasM, hasB};
+};
+
+// Legend component that conditionally renders based on used abbreviations
+const AbbreviationLegend = ({hasK, hasM, hasB}) => (
+  <View style={styles.abbreviationLegendContainer}>
+    {hasK && <Text style={styles.abbreviationLegendText}>K - Thousand</Text>}
+    {hasM && <Text style={styles.abbreviationLegendText}>M - Million</Text>}
+    {hasB && <Text style={styles.abbreviationLegendText}>B - Billion</Text>}
+  </View>
+);
+
 // AnimatedPieChart Component
 const AnimatedPieChart = React.memo(({title, data, delay}) => {
   const opacity = useSharedValue(0);
@@ -144,13 +173,22 @@ const AnimatedPieChart = React.memo(({title, data, delay}) => {
       setTooltipSelectedIndex(undefined);
     }, 10000);
   };
+  // Transforming data for line chart
+  const lineData = data.map(item => ({
+    value: item.population,
+    label: item.name,
+  }));
+
+  const {hasK, hasM, hasB} = determineUsedAbbreviations(lineData);
 
   return (
     <View>
       <Text style={styles.chartTitle}>{title}</Text>
+      <AbbreviationLegend hasK={hasK} hasM={hasM} hasB={hasB} />
+
       {isLoaded ? (
         <Animated.View style={[animatedStyle, styles.chartContainer]}>
-          <PieChart
+          {/* <PieChart
             data={pieData}
             showText
             textColor="black"
@@ -166,8 +204,46 @@ const AnimatedPieChart = React.memo(({title, data, delay}) => {
             tooltipDuration={10000} // Match with legend timeout
             tooltipBackgroundColor="#eee"
             tooltipBorderRadius={10}
+          /> */}
+          {/* <LineChart
+            data={lineData}
+            showText
+            textColor="black"
+            width={screenWidth - 40} // Adjust width as necessary
+            height={220}
+            hideRules
+            hideYAxisText
+            isAnimated
+            yAxisLabelSuffix="k"
+            color="#000"
+          /> */}
+          <BarChart
+            data={lineData}
+            // barWidth={50}
+            width={screenWidth - 70}
+            spacing={30}
+            // isAnimated
+            // labelWidth={90}
+            stepHeight={35}
+            maxValue={Math.max(...lineData.map(item => item.value))}
+            yAxisThickness={1}
+            xAxisThickness={1}
+            yAxisTextStyle={styles.yAxisText}
+            xAxisLabelTextStyle={styles.xAxisLabelText}
+            showValuesAsTopLabel={true}
+            topLabelTextStyle={{color: 'black', fontSize: 8}}
+            frontColor="#20B2AA"
+            formatYLabel={value => {
+              if (value >= 1_000_000_000)
+                return `${(value / 1_000_000_000).toFixed(1)}B`;
+              if (value >= 1_000_000)
+                return `${(value / 1_000_000).toFixed(1)}M`;
+              if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+              return value.toString();
+            }}
+            yAxisLabelWidth={40}
           />
-          <Legend data={data} onLegendPress={handleLegendPress} />
+          {/* <Legend data={data} onLegendPress={handleLegendPress} /> */}
         </Animated.View>
       ) : (
         <View style={styles.loaderContainer}>
@@ -185,6 +261,14 @@ const DashboardScreen = () => {
   const [runningCostData, setRunningCostData] = useState([]);
   const [outputData, setOutputData] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [singleSelectedValue, setSingleSelectedValue] = useState('1');
+
+  const options = [
+    {id: '1', name: 'Hatching'},
+    {id: '2', name: 'Feed'},
+    {id: '3', name: 'C. Broiler'},
+    {id: '4', name: 'B & L'},
+  ];
 
   const handleFilterPress = useCallback(() => {
     navigation.openDrawer();
@@ -373,6 +457,7 @@ const DashboardScreen = () => {
   return (
     <>
       <Header title="Dashboard" onFilterPress={handleFilterPress} />
+
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
@@ -382,6 +467,20 @@ const DashboardScreen = () => {
             <ActivityIndicator size="large" color="#16a085" />
           </View>
         )}
+
+        <View style={{width: '100%', alignItems: 'flex-end', marginTop: 5}}>
+          <View style={{width: '48%'}}>
+            <CustomDropdown
+              label="Select an option"
+              selectedValue={singleSelectedValue}
+              onValueChange={value => setSingleSelectedValue(value)}
+              options={options}
+              loading={false}
+              showLabel={false}
+            />
+          </View>
+        </View>
+
         <View style={styles.cardsContainer}>
           {metrics.map((item, index) => (
             <MetricCard
@@ -393,7 +492,7 @@ const DashboardScreen = () => {
           ))}
         </View>
 
-        <View style={styles.chartContainer}>
+        <View>
           <AnimatedPieChart
             title="Location wise Running Cost"
             data={runningCostData}
@@ -401,7 +500,7 @@ const DashboardScreen = () => {
           />
         </View>
 
-        <View style={styles.chartContainer}>
+        <View>
           <AnimatedPieChart
             title="Location wise Output"
             data={outputData}
@@ -457,6 +556,7 @@ const styles = StyleSheet.create({
     marginTop: 25,
     marginBottom: 10,
     paddingHorizontal: 5,
+    textAlign: 'left',
   },
   loaderContainer: {
     height: 220,
@@ -488,6 +588,28 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     alignItems: 'center',
+  },
+  yAxisText: {
+    color: '#555',
+    fontSize: 10,
+  },
+  xAxisLabelText: {
+    color: '#777',
+    fontSize: 10,
+    fontWeight: '500',
+    textAlign: 'left',
+    paddingHorizontal: 5,
+  },
+  abbreviationLegendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10, // Adjust as needed
+    paddingHorizontal: 10,
+  },
+  abbreviationLegendText: {
+    fontSize: 12,
+    color: '#333',
+    fontFamily: FONTFAMILY.regular,
   },
 });
 

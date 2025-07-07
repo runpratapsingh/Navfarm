@@ -210,7 +210,7 @@ const DataEntryScreen = () => {
       <Animated.View style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#2E313F" />
         <Header
-          title="Data Entry Summary"
+          title="Data Entry"
           onFilterPress={() => navigation.openDrawer()}
         />
         <View style={styles.tabsContainer}>

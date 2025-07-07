@@ -1,7 +1,8 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import {COLORS, FONTFAMILY} from '../theme/theme';
+import CustomDropdown from './DataEntryHistoryCustumDropdown';
 
 const Header = ({onFilterPress, title}) => {
   return (
@@ -14,6 +15,7 @@ const Header = ({onFilterPress, title}) => {
 
         <Text style={styles.headerTitle}>{title || ''}</Text>
       </View>
+
       <TouchableOpacity>
         <Icon name="bell" size={20} color="white" />
       </TouchableOpacity>
@@ -25,9 +27,8 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 15,
-    paddingVertical: 20,
+    paddingVertical: 10,
     backgroundColor: COLORS.primaryColor,
     borderBottomWidth: 1,
     borderBottomColor: '#000',

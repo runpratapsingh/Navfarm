@@ -1,9 +1,18 @@
 import React, {useState} from 'react';
-import {View, Modal, StyleSheet, TouchableOpacity, Text} from 'react-native';
+import {
+  View,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  Dimensions,
+} from 'react-native';
 import {Calendar} from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {TextInput} from 'react-native';
 import {COLORS, FONTFAMILY} from '../theme/theme';
+
+const {width} = Dimensions.get('window');
 
 // Calendar Component
 const CalendarComponent = ({
@@ -41,6 +50,7 @@ const CalendarComponent = ({
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Calendar
+              style={{width: width * 0.85}}
               theme={{
                 arrowColor: COLORS.SecondaryColor,
               }}

@@ -19,7 +19,7 @@ const StatusModal = ({visible, onClose, message, type = 'success'}) => {
   const iconName = isSuccess ? 'check-circle' : 'exclamation-circle';
   const iconColor = isSuccess ? '#52c41a' : '#ff4d4f';
   const titleText = isSuccess ? 'Success!' : 'Oops! Something went wrong';
-  const buttonColor = isSuccess ? '#52c41a' : COLORS.SecondaryColor;
+  const buttonColor = isSuccess ? COLORS.SecondaryColor : COLORS.SecondaryColor;
   const buttonText = isSuccess ? 'Okay' : 'Dismiss';
 
   return (

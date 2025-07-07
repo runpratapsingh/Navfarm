@@ -10,10 +10,11 @@ const CustomDropdown = ({
   options,
   loading,
   multiSelect = false,
+  showLabel = true,
 }) => {
   return (
     <View style={styles.dropdownContainer}>
-      <Text style={styles.label}>{label} *</Text>
+      {showLabel && <Text style={styles.label}>{label} *</Text>}
       {loading ? (
         <ActivityIndicator size="small" color={COLORS.SecondaryColor} />
       ) : multiSelect ? (
