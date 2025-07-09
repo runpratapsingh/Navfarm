@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
 } from 'react-native';
 import api from '../../../Apiconfig/ApiconfigWithInterceptor';
@@ -543,7 +542,7 @@ const DailyDataEntry = () => {
       style={styles.container1}>
       <>
         <Header
-          title="Daily Data Entry"
+          title="Multi Batch Entry"
           onFilterPress={() => navigation.openDrawer()}
         />
         <ScrollView

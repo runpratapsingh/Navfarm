@@ -84,7 +84,7 @@ function DrawerNavigation() {
               fontSize: 16,
               fontFamily: FONTFAMILY.semibold,
             },
-            drawerLabel: 'Daily Data Entry',
+            drawerLabel: 'Multi Batch Entry',
             drawerIcon: ({color, size}) => (
               <Icon name="object-group" color="#000000" size={20} />
             ),

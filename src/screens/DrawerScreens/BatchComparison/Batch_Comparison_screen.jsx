@@ -465,8 +465,8 @@ const styles = StyleSheet.create({
     fontFamily: FONTFAMILY.regular,
   },
   dateInput: {
+    borderColor: COLORS.primaryColor,
     borderWidth: 1,
-    borderColor: '#DDD',
     borderRadius: 5,
     paddingVertical: 5,
     paddingHorizontal: 10,

@@ -74,7 +74,7 @@ const Card = ({image, label, item}) => {
 };
 
 const CategorySelection = () => {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState('');
@@ -172,6 +172,7 @@ const CategorySelection = () => {
           response.message ||
             'Failed to fetch data please check internet connection',
         );
+        setData([]);
         setButtonText('OK');
       }
     } catch (error) {
